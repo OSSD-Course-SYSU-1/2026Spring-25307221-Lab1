@@ -223,38 +223,70 @@ struct ChatPage {
     // goto login page!
     router.replaceUrl({ url: 'pages/LoginPage', });
   }
-
+  @State showSearch: boolean = false;  // 控制搜索框显隐
+  @State searchKeyword: string = '';   // 搜索关键词
 
   build() {
     Column() {
       // 聊天界面自定义标题栏
       CustomeTitleBar({ connectStatus: this.connectStatus, keepAliveStatus: this.keepAliveStatus })
-
+      // 标题栏 Row，比如：
+      Row() {
+        Text('聊天').fontSize(20).fontWeight(FontWeight.Bold)
+        Blank()  // 把搜索按钮推到右侧
+        Button({ type: ButtonType.Circle }) {
+          // 如果没有图标，直接用文字
+          Text('🔍').fontSize(24)
+        }
+        .width(40).height(40)
+        .backgroundColor(Color.Transparent)
+        .onClick(() => {
+          this.showSearch = !this.showSearch;
+          this.searchKeyword = '';
+        })
+      }
+      .width('100%').padding(10)
+      if (this.showSearch) {
+        TextInput({ placeholder: '搜索聊天记录...', text: this.searchKeyword })
+          .width('90%')
+          .margin(10)
+          .onChange((value: string) => {
+            this.searchKeyword = value;
+          })
+      }
       // 聊天界面内容区
       Column() {
         // List性能需极致优化的情况下，还可使用“组件复用”技术，详见官方资料：
         // https://developer.huawei.com/consumer/cn/doc/best-practices-V5/bpta-best-practices-long-list-V5#section36781044162218
         List({ scroller: this.scroller }) {
           LazyForEach(this.messagesDataSource, (m: Message, index: number) => {
-            ListItem() {
-              // 消息item的整体布局
-              Column() {
-                /* 显示消息时间 */
-                MsgTimeView({ message: m })
+            // 过滤逻辑：如果有关键词且消息内容不包含关键词，则返回一个不可见的空 ListItem
+            if (this.searchKeyword.length > 0 && !m.content.toLowerCase().includes(this.searchKeyword.toLowerCase())) {
+              ListItem() {}.visibility(Visibility.None).height(0)
+            } else {
+              ListItem() {
+                // 原有的消息整体布局
+                Column() {
+                  /* 显示消息时间 */
+                  MsgTimeView({ message: m })
 
-                /* 显示消息内容 */
-                if (m.msgType === MsgType.TYPE_SYSTEAM$INFO) {
-                  MsgView_system({ message: m })
-                } else if (m.msgType === MsgType.TYPE_TEXT) {
-                  MsgView_normal({ message: m })
-                } else {
-                  // TODO: 更多消息类型支持。。。
+                  /* 显示消息内容 */
+                  if (m.msgType === MsgType.TYPE_SYSTEAM$INFO) {
+                    MsgView_system({ message: m })
+                  } else if (m.msgType === MsgType.TYPE_TEXT) {
+                    MsgView_normal({ message: m })
+                  } else {
+                    // TODO: 更多消息类型支持。。。
+                  }
                 }
+                // 高亮：匹配关键词的消息添加淡黄色背景
+                .backgroundColor(
+                  this.searchKeyword.length > 0 && m.content.toLowerCase().includes(this.searchKeyword.toLowerCase())
+                    ? '#FFF3CD' : Color.Transparent
+                )
               }
             }
-            // 列表顶部和底部的的空白间隔
-            .margin({top: index === 0 ? 15 : 0, bottom: 15})
-          }, (m: Message) => MessagesDataSource.messageItemKey(m))// 提示：在List中使用LazyForEach时，响应式ui需要key变化才会更新
+          }, (m: Message) => MessagesDataSource.messageItemKey(m))
         }
         // 监听组件触屏事件，确保触碰聊天列表时，能自动收起输入法软键盘，提升用户体验
         .onTouch((event: TouchEvent) => {
