@@ -61,7 +61,7 @@ struct LoginPage {
         // TODO: -> 友情提示：登陆MobileIMSDK服务器成功后的事情在此实现即可！
 
         // 进入主界面
-        router.replaceUrl({ url: 'pages/ChatPage'});
+        router.replaceUrl({ url: 'pages/MainPage' });
       }
       // 登陆失败
       else {
