@@ -1,4 +1,4 @@
-import { allContacts, recentContacts, Contact } from './model/ContactModel';
+import { allContacts, recentContacts, Contact } from '../model/ContactModel';
 import router from '@ohos.router';
 
 @Entry
