@@ -59,14 +59,32 @@ struct ChatPage {
   /** 事件回调：你被踢了 */
   kickoutEventCallback?: Function;
 
+  @State showSearch: boolean = false;  // 控制搜索框显隐
+  @State searchKeyword: string = '';   // 搜索关键词
+  @State contactId: string = '';
+  @State contactName: string = '';
+  @State simulatedMessages: Message[] = [];
+
   /**
    * 生命周期中只被调用一次，类似于iOS中的viewDidLoad、Android中的onCreate.
    */
   aboutToAppear() {
-    // 添加事件通知
-    this.addEvents();
-    // 添加一条预定义的系统消息在列表列表里
-    IMClientManager.getInstance().getMessageProvider().addSystemMessage('当前通信层，基于鸿蒙NEXT原生WebSocket');
+    let params = router.getParams() as Record<string, Object>;
+    if (params) {
+      this.contactId = (params['contactId'] as string) || '';
+      this.contactName = (params['contactName'] as string) || '';
+      if (this.contactId) {
+        this.loadSimulatedMessages();
+      }
+    }
+  }
+
+  loadSimulatedMessages() {
+    this.simulatedMessages = [
+      new Message(this.contactId, this.contactName, Date.now(), `你好，我是${this.contactName}`, MsgType.TYPE_TEXT),
+      new Message('me', '我', Date.now(), '今天天气真不错', MsgType.TYPE_TEXT),
+      new Message(this.contactId, this.contactName, Date.now(), '是啊，下午出去走走吧', MsgType.TYPE_TEXT),
+    ];
   }
 
   /**
@@ -223,8 +241,6 @@ struct ChatPage {
     // goto login page!
     router.replaceUrl({ url: 'pages/LoginPage', });
   }
-  @State showSearch: boolean = false;  // 控制搜索框显隐
-  @State searchKeyword: string = '';   // 搜索关键词
 
   build() {
     Column() {
@@ -256,61 +272,92 @@ struct ChatPage {
       }
       // 聊天界面内容区
       Column() {
-        // List性能需极致优化的情况下，还可使用“组件复用”技术，详见官方资料：
+        // List性能需极致优化的情况下，还可使用"组件复用"技术，详见官方资料：
         // https://developer.huawei.com/consumer/cn/doc/best-practices-V5/bpta-best-practices-long-list-V5#section36781044162218
-        List({ scroller: this.scroller }) {
-          LazyForEach(this.messagesDataSource, (m: Message, index: number) => {
-            // 过滤逻辑：如果有关键词且消息内容不包含关键词，则返回一个不可见的空 ListItem
-            if (this.searchKeyword.length > 0 && !m.content.toLowerCase().includes(this.searchKeyword.toLowerCase())) {
-              ListItem() {}.visibility(Visibility.None).height(0)
-            } else {
+        if (this.contactId) {
+          // 从联系人跳转来的，使用模拟消息（可在此也加入搜索过滤，但为了清晰暂不加）
+          List({ scroller: this.scroller }) {
+            ForEach(this.simulatedMessages, (m: Message, index: number) => {
               ListItem() {
-                // 原有的消息整体布局
                 Column() {
-                  /* 显示消息时间 */
                   MsgTimeView({ message: m })
-
-                  /* 显示消息内容 */
-                  if (m.msgType === MsgType.TYPE_SYSTEAM$INFO) {
-                    MsgView_system({ message: m })
-                  } else if (m.msgType === MsgType.TYPE_TEXT) {
+                  if (m.msgType === MsgType.TYPE_TEXT) {
                     MsgView_normal({ message: m })
-                  } else {
-                    // TODO: 更多消息类型支持。。。
-                  }
+                  } // 其他类型酌情保留
                 }
-                // 高亮：匹配关键词的消息添加淡黄色背景
-                .backgroundColor(
-                  this.searchKeyword.length > 0 && m.content.toLowerCase().includes(this.searchKeyword.toLowerCase())
-                    ? '#FFF3CD' : Color.Transparent
-                )
               }
-            }
-          }, (m: Message) => MessagesDataSource.messageItemKey(m))
-        }
-        // 监听组件触屏事件，确保触碰聊天列表时，能自动收起输入法软键盘，提升用户体验
-        .onTouch((event: TouchEvent) => {
-          // 收起软键盘
-          ToolKits.hideSoftInputMethod(this.getUIContext());
-        })
-        // 监听组件大小变化事件（用于实现当软键盘显示时，列表高度被压缩后，消息不能自动显示最后一条的问题）
-        .onSizeChange((oldValue: SizeOptions, newValue: SizeOptions) => {
-          let oldHeight = oldValue.height, newHeight = newValue.height;
-          oldHeight = (oldHeight === undefined ? 0 : oldHeight);
-          newHeight = (newHeight === undefined ? 0 : newHeight);
-          // 列表高度变小，可以认为是软键盘显示了
-          let toBeSmall = (newHeight >0 && newHeight < oldHeight);
-          if(toBeSmall) {
-            // 消息列表滚动到底部，确保最新一条消息被显示
-            this.scrollToBottom();
+            }, (m: Message, index: number) => index.toString())
           }
-        })
-        .scrollBar(BarState.Off)
-        .edgeEffect(EdgeEffect.Spring)
-        .width("100%")
-        .height('100%')
-        .layoutWeight(1)
-        .listDirection(Axis.Vertical)
+          // 监听组件触屏事件，确保触碰聊天列表时，能自动收起输入法软键盘，提升用户体验
+          .onTouch((event: TouchEvent) => {
+            // 收起软键盘
+            ToolKits.hideSoftInputMethod(this.getUIContext());
+          })
+          // 监听组件大小变化事件（用于实现当软键盘显示时，列表高度被压缩后，消息不能自动显示最后一条的问题）
+          .onSizeChange((oldValue: SizeOptions, newValue: SizeOptions) => {
+            let oldHeight = oldValue.height, newHeight = newValue.height;
+            oldHeight = (oldHeight === undefined ? 0 : oldHeight);
+            newHeight = (newHeight === undefined ? 0 : newHeight);
+            // 列表高度变小，可以认为是软键盘显示了
+            let toBeSmall = (newHeight > 0 && newHeight < oldHeight);
+            if (toBeSmall) {
+              // 消息列表滚动到底部，确保最新一条消息被显示
+              this.scrollToBottom();
+            }
+          })
+          .scrollBar(BarState.Off)
+          .edgeEffect(EdgeEffect.Spring)
+          .width("100%")
+          .height('100%')
+          .layoutWeight(1)
+          .listDirection(Axis.Vertical)
+        } else {
+          // 原有逻辑（包含搜索功能）
+          List({ scroller: this.scroller }) {
+            LazyForEach(this.messagesDataSource, (m: Message, index: number) => {
+              if (this.searchKeyword.length > 0 && !m.content.toLowerCase().includes(this.searchKeyword.toLowerCase())) {
+                ListItem() {}.visibility(Visibility.None).height(0)
+              } else {
+                ListItem() {
+                  Column() {
+                    MsgTimeView({ message: m })
+                    if (m.msgType === MsgType.TYPE_TEXT) {
+                      MsgView_normal({ message: m })
+                    }
+                  }
+                  // 高亮：匹配关键词的消息添加淡黄色背景
+                  .backgroundColor(
+                    this.searchKeyword.length > 0 && m.content.toLowerCase().includes(this.searchKeyword.toLowerCase())
+                      ? '#FFF3CD' : Color.Transparent
+                  )
+                }
+              }
+            }, (m: Message, index: number) => MessagesDataSource.messageItemKey(m))
+          }
+          // 监听组件触屏事件，确保触碰聊天列表时，能自动收起输入法软键盘，提升用户体验
+          .onTouch((event: TouchEvent) => {
+            // 收起软键盘
+            ToolKits.hideSoftInputMethod(this.getUIContext());
+          })
+          // 监听组件大小变化事件（用于实现当软键盘显示时，列表高度被压缩后，消息不能自动显示最后一条的问题）
+          .onSizeChange((oldValue: SizeOptions, newValue: SizeOptions) => {
+            let oldHeight = oldValue.height, newHeight = newValue.height;
+            oldHeight = (oldHeight === undefined ? 0 : oldHeight);
+            newHeight = (newHeight === undefined ? 0 : newHeight);
+            // 列表高度变小，可以认为是软键盘显示了
+            let toBeSmall = (newHeight > 0 && newHeight < oldHeight);
+            if (toBeSmall) {
+              // 消息列表滚动到底部，确保最新一条消息被显示
+              this.scrollToBottom();
+            }
+          })
+          .scrollBar(BarState.Off)
+          .edgeEffect(EdgeEffect.Spring)
+          .width("100%")
+          .height('100%')
+          .layoutWeight(1)
+          .listDirection(Axis.Vertical)
+        }
       }
       .backgroundColor("#f0f2f6")
       .layoutWeight(1)
@@ -325,4 +372,3 @@ struct ChatPage {
     .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP, SafeAreaEdge.BOTTOM])
   }
 }
-
