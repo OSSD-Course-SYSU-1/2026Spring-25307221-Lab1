@@ -4,6 +4,7 @@
     "pages/ChatPage",
     "pages/LoginPage",
     "pages/SplashPage",
-    "pages/MainPage"
+    "pages/MainPage",
+    "pages/AddFriendPage"
   ]
 }

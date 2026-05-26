@@ -64,11 +64,15 @@ struct ChatPage {
   @State contactId: string = '';
   @State contactName: string = '';
   @State simulatedMessages: Message[] = [];
+  @State inputText: string = '';  // 输入框文本
 
   /**
    * 生命周期中只被调用一次，类似于iOS中的viewDidLoad、Android中的onCreate.
    */
   aboutToAppear() {
+    // 添加事件监听
+    this.addEvents();
+    
     let params = router.getParams() as Record<string, Object>;
     if (params) {
       this.contactId = (params['contactId'] as string) || '';
@@ -80,11 +84,23 @@ struct ChatPage {
   }
 
   loadSimulatedMessages() {
-    this.simulatedMessages = [
-      new Message(this.contactId, this.contactName, Date.now(), `你好，我是${this.contactName}`, MsgType.TYPE_TEXT),
-      new Message('me', '我', Date.now(), '今天天气真不错', MsgType.TYPE_TEXT),
-      new Message(this.contactId, this.contactName, Date.now(), '是啊，下午出去走走吧', MsgType.TYPE_TEXT),
-    ];
+    // 获取当前登录用户ID
+    let localUid = ToolKits.getLocalUserUid() || 'me';
+    
+    // 创建模拟消息，设置不同的时间戳
+    let now = Date.now();
+    let msg1 = new Message(this.contactId, this.contactName, now - 180000, `你好，我是${this.contactName}`, MsgType.TYPE_TEXT);
+    msg1.showTopTime = true;  // 第一条消息总是显示时间
+    
+    let msg2 = new Message(localUid, '我', now - 60000, '今天天气真不错', MsgType.TYPE_TEXT);
+    // 与上一条消息间隔 120000ms (2分钟)，不超过2分钟，不显示时间
+    msg2.showTopTime = false;
+    
+    let msg3 = new Message(this.contactId, this.contactName, now, '是啊，下午出去走走吧', MsgType.TYPE_TEXT);
+    // 与上一条消息间隔 60000ms (1分钟)，不超过2分钟，不显示时间
+    msg3.showTopTime = false;
+    
+    this.simulatedMessages = [msg1, msg2, msg3];
   }
 
   /**
@@ -276,7 +292,7 @@ struct ChatPage {
         // https://developer.huawei.com/consumer/cn/doc/best-practices-V5/bpta-best-practices-long-list-V5#section36781044162218
         if (this.contactId) {
           // 从联系人跳转来的，使用模拟消息（可在此也加入搜索过滤，但为了清晰暂不加）
-          List({ scroller: this.scroller }) {
+          List({ scroller: this.scroller,space: 8 }) {
             ForEach(this.simulatedMessages, (m: Message, index: number) => {
               ListItem() {
                 Column() {
@@ -288,6 +304,7 @@ struct ChatPage {
               }
             }, (m: Message, index: number) => index.toString())
           }
+          .layoutWeight(1)
           // 监听组件触屏事件，确保触碰聊天列表时，能自动收起输入法软键盘，提升用户体验
           .onTouch((event: TouchEvent) => {
             // 收起软键盘
@@ -323,6 +340,8 @@ struct ChatPage {
                     MsgTimeView({ message: m })
                     if (m.msgType === MsgType.TYPE_TEXT) {
                       MsgView_normal({ message: m })
+                    } else {
+                      MsgView_system({ message: m })
                     }
                   }
                   // 高亮：匹配关键词的消息添加淡黄色背景
