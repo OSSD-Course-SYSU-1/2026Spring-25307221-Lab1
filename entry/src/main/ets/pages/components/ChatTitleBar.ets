@@ -28,10 +28,34 @@ export struct CustomeTitleBar {
   // 返回按钮图片
   backImg: Resource = $r("app.media.widget_title_btn_back_normal");
 
+  // 返回按钮点击回调
+  onBackClick?: () => void;
+
+  // 是否显示返回按钮
+  @Prop showBackButton: boolean = false;
+
   build() {
 
     Column() {
       Row() {
+        // 返回按钮
+        if (this.showBackButton) {
+          Row() {
+            Image(this.backImg)
+              .width(24)
+              .height(24)
+              .objectFit(ImageFit.Contain)
+          }
+          .width(40)
+          .height(40)
+          .justifyContent(FlexAlign.Center)
+          .onClick(() => {
+            if (this.onBackClick) {
+              this.onBackClick();
+            }
+          })
+        }
+
         Row() {
           Text('HarmonyChat')
             .textAlign(TextAlign.Start)
@@ -47,7 +71,6 @@ export struct CustomeTitleBar {
             .fontColor(Color.White)
             .fontSize(11)
             .fontWeight(400)
-              // .backgroundColor('#e50a59f7')
             .backgroundColor(Color.Black)
             .padding({top:3, bottom:3, left: 4, right: 4})
             .borderRadius(5)
@@ -61,24 +84,18 @@ export struct CustomeTitleBar {
         .layoutWeight(1)
 
         Row() {
-          // Image($r(this.connectStatus ? (this.keepAliveStatus ? 'app.media.ic_net_status_light': 'app.media.ic_net_status_ok') : 'app.media.ic_net_status_warn'))
-          //   .width(12)
-          //   .height(12)
-          //   .objectFit(ImageFit.Fill)
-          //   .margin({right: 5})
-
           Text()
             .width(12)
             .height(12)
             .borderRadius(6)
             .margin({right: 5})
-            .backgroundColor(this.connectStatus ? (this.keepAliveStatus ? '#f1f515': '#00de7a') : '#ff8c6f')// '#00de7a'
+            .backgroundColor(this.connectStatus ? (this.keepAliveStatus ? '#f1f515': '#00de7a') : '#ff8c6f')
             .border({width: 1, color: (this.connectStatus ? (this.keepAliveStatus ? '#d1d505': '#00c86e') : '#f26c4f'), radius: 6})
             .shadow({
-              radius: 15, // 模糊半径
-              color: this.keepAliveStatus ? "#59f1f515" : '#00ffffff', // 阴影颜色
-              offsetX: 0, // X轴偏移量
-              offsetY: 15 // Y轴偏移量
+              radius: 15,
+              color: this.keepAliveStatus ? "#59f1f515" : '#00ffffff',
+              offsetX: 0,
+              offsetY: 15
               })
 
           Text('UID:')
@@ -90,7 +107,6 @@ export struct CustomeTitleBar {
             .margin({right: 2})
 
           Text(ClientCoreSDK.getInstance().currentLoginInfo?.loginUserId)
-            // .width(40)
             .constraintSize({maxWidth: 42})
             .fontSize(13)
             .fontColor('#505256')
@@ -104,46 +120,29 @@ export struct CustomeTitleBar {
 
       this.BottomLine()
 
-      // if(!this.connectStatus) {
-        Row() {
-          LoadingProgress().width(20).height(20).margin({ right: 8 }).color('#ff6434')
-          // Image($r('app.media.ic_disconnect_info2'))
-          //   .width(14)
-          //   .height(14)
-          //   .objectFit(ImageFit.Fill)
-          //   .margin({right: 8})
-          Text('网络不给力，正在努力恢复中…')
-            .maxLines(1)
-            .ellipsisMode(EllipsisMode.CENTER)
-            .textOverflow({ overflow: TextOverflow.Ellipsis })
-            .fontColor('#ff6434')
-            .fontSize(14)
-        }
-        .width('100%')
-        .height(40)
-        .backgroundColor('#fff0eb')
-        .justifyContent(FlexAlign.Center)
-        .visibility(this.connectStatus ? Visibility.None : Visibility.Visible)
-        .animation({
-          duration: 250,
-          curve: Curve.EaseInOut,
-          iterations: 1,
-          playMode: PlayMode.Normal
-        })
-      // }
+      Row() {
+        LoadingProgress().width(20).height(20).margin({ right: 8 }).color('#ff6434')
+        Text('网络不给力，正在努力恢复中…')
+          .maxLines(1)
+          .ellipsisMode(EllipsisMode.CENTER)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
+          .fontColor('#ff6434')
+          .fontSize(14)
+      }
+      .width('100%')
+      .height(40)
+      .backgroundColor('#fff0eb')
+      .justifyContent(FlexAlign.Center)
+      .visibility(this.connectStatus ? Visibility.None : Visibility.Visible)
+      .animation({
+        duration: 250,
+        curve: Curve.EaseInOut,
+        iterations: 1,
+        playMode: PlayMode.Normal
+      })
     }
     .width('100%')
-    .backgroundColor(ToolKits.chat_page_title_background_color)//'#2e3746')
-    // .linearGradient({
-    //   direction:GradientDirection.Right,// 渐变方向
-    //   colors:[['#2e3746',0],['#0e1a26',1]]
-    // })
-    // .shadow({
-    //   radius: 6, // 模糊半径
-    //   color: "#ffff0000", // 阴影颜色
-    //   offsetX: 0, // X轴偏移量
-    //   offsetY: 10 // Y轴偏移量
-    // })
+    .backgroundColor(ToolKits.chat_page_title_background_color)
   }
 
 

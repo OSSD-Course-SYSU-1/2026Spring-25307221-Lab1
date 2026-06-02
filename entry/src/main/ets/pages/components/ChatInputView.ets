@@ -26,9 +26,20 @@ export struct ChatInputView {
 
   @State messageInput: string = '';
   @State receiverInput: string = '';
+  
+  // AI 聊天回调函数（可选）
+  onSendMessage?: (message: string) => void;
 
   // 发送消息实现方法
   doSendMessage() {
+    // 如果提供了 AI 聊天回调，则使用回调
+    if (this.onSendMessage && this.messageInput.length > 0) {
+      this.onSendMessage(this.messageInput);
+      this.messageInput = '';
+      return;
+    }
+    
+    // 原有的 IM 发送逻辑
     if(this.messageInput.length > 0 && this.receiverInput.length > 0) {
       if(this.receiverInput === ClientCoreSDK.getInstance().currentLoginInfo?.loginUserId) {
         ToolKits.showToast('不能给自已发送消息哦！');

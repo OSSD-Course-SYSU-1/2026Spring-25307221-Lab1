@@ -1,6 +1,6 @@
 import { allContacts, recentContacts, Contact } from '../model/ContactModel';
 import router from '@ohos.router';
-
+import { aiCharacters, AICharacter } from '../model/AICharacterData'
 @Entry
 @Component
 struct MainPage {
@@ -54,7 +54,7 @@ struct MainPage {
             Column() {
               // 顶部标题栏
               Row() {
-                Text('联系人')
+                Text('AI广场')
                   .fontSize(20)
                   .fontWeight(FontWeight.Bold)
               }
@@ -66,11 +66,11 @@ struct MainPage {
 
               // 联系人列表
               List({ space: 2 }) {
-                ForEach(allContacts, (contact: Contact) => {
+                ForEach(aiCharacters, (ai: AICharacter) => {
                   ListItem() {
-                    this.contactItem(contact)
+                    this.aiItem(ai)
                   }
-                }, (contact: Contact) => contact.id)
+                }, (ai: AICharacter) => ai.id)
               }
               .width('100%')
               .layoutWeight(1)
@@ -78,7 +78,7 @@ struct MainPage {
             .width('100%')
             .height('100%')
           }
-          .tabBar(this.TabBuilder('联系人', 1, $r('app.media.app_icon')))
+          .tabBar(this.TabBuilder('AI广场', 1, $r('app.media.app_icon')))
           .align(Alignment.Top)
 
           // 发现 Tab
@@ -325,6 +325,42 @@ struct MainPage {
         params: {
           contactId: contact.id,
           contactName: contact.name
+        }
+      });
+    })
+  }
+
+  // AI角色条目组件
+  @Builder aiItem(ai: AICharacter) {
+    Row() {
+      Image(ai.avatar)
+        .width(48).height(48)
+        .borderRadius(24)
+        .margin(10)
+      
+      Column() {
+        Text(ai.name)
+          .fontSize(18)
+          .fontWeight(FontWeight.Medium)
+        
+        Text(ai.description)
+          .fontSize(14)
+          .fontColor('#999999')
+          .margin({ top: 4 })
+      }
+      .alignItems(HorizontalAlign.Start)
+      .layoutWeight(1)
+      .margin({ left: 10 })
+    }
+    .width('100%')
+    .padding(5)
+    .onClick(() => {
+      router.pushUrl({
+        url: 'pages/ChatPage',
+        params: {
+          contactId: ai.id,
+          contactName: ai.name,
+          greeting: ai.greeting  // 传递问候语
         }
       });
     })

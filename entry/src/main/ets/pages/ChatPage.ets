@@ -22,6 +22,8 @@ import {router } from '@kit.ArkUI';
 import ToolKits from './utils/ToolKits';
 import { common } from '@kit.AbilityKit';
 import { MsgTimeView } from './components/msg_view/MsgTimeView';
+import { DeepSeekService, ChatMessage } from '../service/DeepSeekService';
+import { aiCharacters } from '../model/AICharacterData';
 
 const TAG: string = '[ChatPage] '
 
@@ -65,6 +67,9 @@ struct ChatPage {
   @State contactName: string = '';
   @State simulatedMessages: Message[] = [];
   @State inputText: string = '';  // 输入框文本
+  @State greeting: string = '';  // AI问候语
+  @State aiPrompt: string = '';  // AI角色的系统提示词
+  @State isAILoading: boolean = false;  // AI是否正在响应
 
   /**
    * 生命周期中只被调用一次，类似于iOS中的viewDidLoad、Android中的onCreate.
@@ -77,6 +82,14 @@ struct ChatPage {
     if (params) {
       this.contactId = (params['contactId'] as string) || '';
       this.contactName = (params['contactName'] as string) || '';
+      this.greeting = (params['greeting'] as string) || '';
+      
+      // 查找对应的 AI 角色，获取 prompt
+      const aiCharacter = aiCharacters.find(ai => ai.id === this.contactId);
+      if (aiCharacter) {
+        this.aiPrompt = aiCharacter.prompt;
+      }
+      
       if (this.contactId) {
         this.loadSimulatedMessages();
       }
@@ -89,7 +102,8 @@ struct ChatPage {
     
     // 创建模拟消息，设置不同的时间戳
     let now = Date.now();
-    let msg1 = new Message(this.contactId, this.contactName, now - 180000, `你好，我是${this.contactName}`, MsgType.TYPE_TEXT);
+    let greetingMessage = this.greeting || `你好，我是${this.contactName}`;
+    let msg1 = new Message(this.contactId, this.contactName, now - 180000, greetingMessage, MsgType.TYPE_TEXT);
     msg1.showTopTime = true;  // 第一条消息总是显示时间
     
     let msg2 = new Message(localUid, '我', now - 60000, '今天天气真不错', MsgType.TYPE_TEXT);
@@ -101,6 +115,49 @@ struct ChatPage {
     msg3.showTopTime = false;
     
     this.simulatedMessages = [msg1, msg2, msg3];
+  }
+
+  /**
+   * 发送消息到 DeepSeek AI
+   * @param userMessage 用户消息内容
+   */
+  async sendMessageToAI(userMessage: string) {
+    if (!this.aiPrompt || this.isAILoading) {
+      return;
+    }
+
+    try {
+      this.isAILoading = true;
+      
+      // 添加用户消息到列表
+      let localUid = ToolKits.getLocalUserUid() || 'me';
+      let userMsg = new Message(localUid, '我', Date.now(), userMessage, MsgType.TYPE_TEXT);
+      userMsg.showTopTime = true;
+      this.simulatedMessages.push(userMsg);
+      
+      // 构建聊天消息
+      const messages: ChatMessage[] = [
+        { role: 'system', content: this.aiPrompt },
+        { role: 'user', content: userMessage }
+      ];
+      
+      // 调用 DeepSeek API
+      const aiResponse = await DeepSeekService.getInstance().chat(messages);
+      
+      // 添加 AI 回复到列表
+      let aiMsg = new Message(this.contactId, this.contactName, Date.now(), aiResponse, MsgType.TYPE_TEXT);
+      aiMsg.showTopTime = true;
+      this.simulatedMessages.push(aiMsg);
+      
+      // 滚动到底部
+      this.scrollToBottom();
+      
+    } catch (error) {
+      console.error(TAG + '发送消息到 AI 失败: ' + JSON.stringify(error));
+      ToolKits.showToast('AI 响应失败，请稍后重试');
+    } finally {
+      this.isAILoading = false;
+    }
   }
 
   /**
@@ -261,7 +318,14 @@ struct ChatPage {
   build() {
     Column() {
       // 聊天界面自定义标题栏
-      CustomeTitleBar({ connectStatus: this.connectStatus, keepAliveStatus: this.keepAliveStatus })
+      CustomeTitleBar({ 
+        connectStatus: this.connectStatus, 
+        keepAliveStatus: this.keepAliveStatus,
+        showBackButton: true,
+        onBackClick: () => {
+          router.back();
+        }
+      })
       // 标题栏 Row，比如：
       Row() {
         // 返回按钮
@@ -392,7 +456,11 @@ struct ChatPage {
       .layoutWeight(1)
 
       // 底部消息输入区
-      ChatInputView()
+      ChatInputView({ 
+        onSendMessage: this.aiPrompt ? (message: string) => {
+          this.sendMessageToAI(message);
+        } : undefined
+      })
     }
     .width('100%')
     .height('100%')

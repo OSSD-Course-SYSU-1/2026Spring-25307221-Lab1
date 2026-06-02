@@ -7,11 +7,11 @@
         "material": {
           "certpath": "C:\\Users\\lenovo\\.ohos\\config\\default_harmonychat-main_PAYPWvvO_VKmTyS2YLGL07jm88RBUmpF74gXoex3yVE=.cer",
           "keyAlias": "debugKey",
-          "keyPassword": "0000001B7D64D0EC01B498FC1BF1BF651E87AB1DE29C0806BD9708DC1C7420538F148D22A9CBF93ED3E440",
+          "keyPassword": "0000001A5833B9BE7F46CE951569ABEA0FF95EC1C63B8DDEDA24B330F21EAECED4BFA500E12A6AAA46EC",
           "profile": "C:\\Users\\lenovo\\.ohos\\config\\default_harmonychat-main_PAYPWvvO_VKmTyS2YLGL07jm88RBUmpF74gXoex3yVE=.p7b",
           "signAlg": "SHA256withECDSA",
           "storeFile": "C:\\Users\\lenovo\\.ohos\\config\\default_harmonychat-main_PAYPWvvO_VKmTyS2YLGL07jm88RBUmpF74gXoex3yVE=.p12",
-          "storePassword": "0000001B6AED9B592368CF898748BF6E6B94BA86E18F4D4C89945CAD447540B390D3C6807A765D67D13981"
+          "storePassword": "0000001A1F0F603235459F2ADC286B56CDB6E536501B367FF29C6D2BBCE6CC65EA8AB4DFA40174C97C7B"
         }
       }
     ],
