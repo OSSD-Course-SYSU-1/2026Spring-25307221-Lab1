@@ -264,8 +264,18 @@ struct ChatPage {
       CustomeTitleBar({ connectStatus: this.connectStatus, keepAliveStatus: this.keepAliveStatus })
       // 标题栏 Row，比如：
       Row() {
+        // 返回按钮
+        Image($r('app.media.app_icon'))
+          .width(24)
+          .height(24)
+          .onClick(() => {
+            router.back();
+          })
+
         Text('聊天').fontSize(20).fontWeight(FontWeight.Bold)
-        Blank()  // 把搜索按钮推到右侧
+          .margin({ left: 12 })
+          .layoutWeight(1)
+        
         Button({ type: ButtonType.Circle }) {
           // 如果没有图标，直接用文字
           Text('🔍').fontSize(24)

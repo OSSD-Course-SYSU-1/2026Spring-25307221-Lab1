@@ -10,7 +10,6 @@
 
 import { common, Want } from '@kit.AbilityKit';
 import { router, window, KeyboardAvoidMode } from '@kit.ArkUI';
-import { LoginInputView } from './components/LoginInputView';
 import ToolKits from './utils/ToolKits';
 import IMClientManager from '../IMClientManager';
 import UIEvent from './constants/UIEvent';
@@ -30,11 +29,11 @@ struct LoginPage {
   /** 登陆超时时间定义（单位：毫秒）*/
   readonly RETRY_DELAY: number = 6000;
 
-  /** 密码输入框是否处于焦点状态（用于优化当输入法软键盘处于显示状态时，输入法软键盘会档住“登录”按钮的问题，优化方法就是自动缩小界面上方的Logo图片大小）*/
+  /** 密码输入框是否处于焦点状态（用于优化当输入法软键盘处于显示状态时，输入法软键盘会档住"登录"按钮的问题，优化方法就是自动缩小界面上方的Logo图片大小）*/
   @State passwordFocused: boolean = false;
 
-  /** 登录名 */
-  @State loginName: string = '';
+  /** 手机号 */
+  @State phoneNumber: string = '';
   /** 登录密码 */
   @State loginPassword: string = '';
 
@@ -76,13 +75,28 @@ struct LoginPage {
    */
   doLogin(): void {
     // 输入检查
-    if (ToolKits.isEmpty(this.loginName, true)) {
-      ToolKits.showToast('登录账号不能为空!');
+    if (ToolKits.isEmpty(this.phoneNumber, true)) {
+      ToolKits.showToast('手机号不能为空!');
+      return;
+    }
+
+    // 手机号格式检查
+    if (!this.isValidPhoneNumber(this.phoneNumber)) {
+      ToolKits.showToast('请输入正确的手机号!');
       return;
     }
 
     // 开始登录
-    this.doLoginImpl(this.loginName, this.loginPassword);
+    this.doLoginImpl(this.phoneNumber, this.loginPassword);
+  }
+
+  /**
+   * 验证手机号格式
+   */
+  isValidPhoneNumber(phone: string): boolean {
+    // 简单的手机号验证：11位数字，以1开头
+    const phoneRegex = /^1\d{10}$/;
+    return phoneRegex.test(phone);
   }
 
   /*
@@ -233,12 +247,49 @@ struct LoginPage {
             }
             .margin({ top: 4 })
 
-            // 输入区组件
-            LoginInputView({
-              loginName: this.loginName,
-              loginPassword: this.loginPassword,
-              passwordFocused: this.passwordFocused
-            })
+            // 输入区
+            Column() {
+              this.TextLine({ bottom: 5 })
+              Row() {
+                Text('手机号')
+                  .fontColor('#0e1a26')
+                  .fontWeight(500)
+                  .width(60)
+                TextInput({ text: $$this.phoneNumber, placeholder: '请输入手机号' })
+                  .inputStyle()
+                  .type(InputType.Number)
+                  .maxLength(11)
+                  .margin({ right: 5 })
+              }
+              .height(52)
+
+              this.TextLine({})
+
+              Row() {
+                Text('密码')
+                  .fontColor('#0e1a26')
+                  .fontWeight(500)
+                  .width(60)
+
+                TextInput({ text: $$this.loginPassword, placeholder: '请输入密码' })
+                  .inputStyle()
+                  .type(InputType.Password)
+                  .margin({ right: 5 })
+                  .passwordIcon({ onIconSrc: $r('app.media.login_showpass_on'), offIconSrc: $r('app.media.login_showpass_off'), })
+                  .onFocus(() => {
+                    this.passwordFocused = true;
+                  })
+                  .onBlur(() => {
+                    this.passwordFocused = false;
+                  })
+              }
+              .height(52)
+              .margin({ top: 5, })
+
+              this.TextLine({})
+            }
+            .width('100%')
+            .margin({ top: 40 })
 
             // 登录按钮
             Button({
@@ -268,6 +319,27 @@ struct LoginPage {
               ToolKits.hideSoftInputMethod(this.getUIContext());
               // 开始登录
               this.doLogin();
+            })
+
+            // 注册按钮
+            Button({
+              type: ButtonType.Normal,
+              stateEffect: true
+            }) {
+              Text('注册账号')
+                .fontSize(16)
+                .fontWeight(FontWeight.Medium)
+                .fontColor('#0A59F7')
+            }
+            .borderRadius(20)
+            .width('100%')
+            .backgroundColor(Color.Transparent)
+            .border({ width: 1, color: '#0A59F7', radius: 20 })
+            .height(40)
+            .margin({ top: 15 })
+            .onClick(() => {
+              // 跳转到注册页面
+              router.pushUrl({ url: 'pages/RegisterPage' });
             })
 
             Blank()
@@ -314,4 +386,24 @@ struct LoginPage {
     // 适配流海屏（顶部状态栏透明并穿过，并透过底部上划操作区）
     .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP, SafeAreaEdge.BOTTOM])
   }
+
+  @Builder
+  TextLine(margin: Margin) {
+    Line()
+      .height(0.5)
+      .width('100%')
+      .backgroundColor('#d0d2d6')
+      .padding({ left: 12, right: 12 })
+      .margin(margin)
+  }
+}
+
+@Extend(TextInput)
+function inputStyle() {
+  .width('100%')
+  .height('100%')
+  .layoutWeight(1)
+  .fontColor('#353535')
+  .placeholderColor('#a1a7af')
+  .backgroundColor(Color.Transparent)
 }

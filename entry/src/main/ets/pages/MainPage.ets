@@ -106,10 +106,6 @@ struct MainPage {
       // 弹出菜单
       if (this.isMenuVisible) {
         Column() {
-          this.PopupMenuItemBuilder('扫一扫', () => {
-            this.isMenuVisible = false;
-            // TODO: 实现扫一扫功能
-          })
           this.PopupMenuItemBuilder('添加好友', () => {
             this.isMenuVisible = false;
             router.pushUrl({

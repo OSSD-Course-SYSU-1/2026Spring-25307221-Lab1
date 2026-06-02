@@ -3,6 +3,7 @@
     "pages/SafePage",
     "pages/ChatPage",
     "pages/LoginPage",
+    "pages/RegisterPage",
     "pages/SplashPage",
     "pages/MainPage",
     "pages/AddFriendPage"
