@@ -153,22 +153,46 @@ struct ChatPage {
       }
 
       if (isBook) {
-        // === 答案之书互动流程：翻书动画 + AI 生成答案 ===
+        // === 答案之书互动流程：翻书动画 + 本地真随机答案 ===
         this.bookQuestion = userMessage;
-        this.bookAnswer = '';
         this.isAILoading = false;
         this.showBookView = true;
 
-        // 后台并行调用 AI
-        let bookMessages: ChatMessage[] = [
-          { role: 'system', content: this.aiPrompt },
-          { role: 'user', content: userMessage }
+        // 从答案库中真随机抽取（不调 AI，确保每次不同）
+        let answers: string[] = [
+          '现在还不是时候。',
+          '跟随你的直觉。',
+          '答案是肯定的。',
+          '换个角度想想。',
+          '你心里其实已经有了答案。',
+          '等待更好的时机。',
+          '勇敢去做吧。',
+          '保持耐心，一切都会明朗。',
+          '不要被表象迷惑。',
+          '是的，但结果可能出乎意料。',
+          '你需要更多信息。',
+          '相信你身边的人。',
+          '放下执念，答案自现。',
+          '这条路值得走下去。',
+          '暂时保持沉默。',
+          '会有人给你答案。',
+          '你的恐惧在阻碍你。',
+          '大胆假设，小心求证。',
+          '答案就在你身边。',
+          '再问一次，换个问法。',
+          '也许吧，谁知道呢。',
+          '命运自有安排。',
+          '别想太多，顺其自然。',
+          '旁观者清。',
+          '这是一次考验。',
+          '听从内心的声音。',
+          '它比你想象的更近。',
+          '不必强求。',
+          '对的人会留下。',
+          '你已经知道该怎么做了。'
         ];
-        DeepSeekService.getInstance().chat(bookMessages).then((ans) => {
-          this.bookAnswer = ans;
-        }).catch((err: Error) => {
-          this.bookAnswer = '答案暂时被迷雾遮蔽…请再试一次。';
-        });
+        let pick = Math.floor(Math.random() * answers.length);
+        this.bookAnswer = answers[pick];
         return;
       }
 
