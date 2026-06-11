@@ -1,14 +1,36 @@
 import { allContacts, recentContacts, Contact } from '../model/ContactModel';
 import router from '@ohos.router';
 import { aiCharacters, AICharacter } from '../model/AICharacterData'
+import { BreakpointType, getBreakpoint, isTabletOrLarger, responsiveValue } from './common/BreakpointSystem';
+import { window } from '@kit.ArkUI';
+
 @Entry
 @Component
 struct MainPage {
   @State currentIndex: number = 0;
   @State isMenuVisible: boolean = false;  // 控制菜单显示
+  @State currentBreakpoint: BreakpointType = BreakpointType.SM;  // 当前设备断点
+  private windowWidth: number = 360;  // 窗口宽度（vp）
+
+  aboutToAppear() {
+    // 获取初始窗口宽度
+    let windowClass = window.getLastWindow(getContext(this));
+    windowClass.then((win) => {
+      let props = win.getWindowProperties();
+      this.windowWidth = props.windowRect.width;
+      this.currentBreakpoint = getBreakpoint(this.windowWidth);
+    });
+  }
 
   build() {
     Stack({ alignContent: Alignment.TopEnd }) {
+      // 监听窗口宽度变化，更新断点
+      Column() {}.width('100%').height(0)
+        .onAreaChange((oldValue: Area, newValue: Area) => {
+          let w = vp2px(newValue.width as number);
+          this.windowWidth = px2vp(w);
+          this.currentBreakpoint = getBreakpoint(this.windowWidth);
+        })
       Column() {
         Tabs({ index: this.currentIndex }) {
           // 消息 Tab：显示最近联系人
@@ -64,16 +86,20 @@ struct MainPage {
               .justifyContent(FlexAlign.Start)
               .alignItems(VerticalAlign.Center)
 
-              // 联系人列表
-              List({ space: 2 }) {
+              // AI角色网格（手机1列，平板2列 — 一次开发多端部署）
+              Grid() {
                 ForEach(aiCharacters, (ai: AICharacter) => {
-                  ListItem() {
+                  GridItem() {
                     this.aiItem(ai)
                   }
                 }, (ai: AICharacter) => ai.id)
               }
+              .columnsTemplate(isTabletOrLarger(this.currentBreakpoint) ? '1fr 1fr' : '1fr')
+              .columnsGap(8)
+              .rowsGap(4)
               .width('100%')
               .layoutWeight(1)
+              .padding({ left: isTabletOrLarger(this.currentBreakpoint) ? 8 : 0, right: isTabletOrLarger(this.currentBreakpoint) ? 8 : 0 })
             }
             .width('100%')
             .height('100%')

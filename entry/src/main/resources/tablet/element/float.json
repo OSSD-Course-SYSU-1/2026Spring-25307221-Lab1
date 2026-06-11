@@ -1,0 +1,20 @@
+{
+  "float": [
+    {
+      "name": "chat_bubble_max_width",
+      "value": "480vp"
+    },
+    {
+      "name": "chat_font_size",
+      "value": "16fp"
+    },
+    {
+      "name": "list_item_padding_horizontal",
+      "value": "24vp"
+    },
+    {
+      "name": "ai_grid_columns",
+      "value": "2"
+    }
+  ]
+}

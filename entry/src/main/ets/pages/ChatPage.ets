@@ -25,6 +25,7 @@ import { common } from '@kit.AbilityKit';
 import { MsgTimeView } from './components/msg_view/MsgTimeView';
 import { DeepSeekService, ChatMessage } from '../service/DeepSeekService';
 import { aiCharacters } from '../model/AICharacterData';
+import { BreakpointType, getBreakpoint, isTabletOrLarger } from './common/BreakpointSystem';
 
 const TAG: string = '[ChatPage] '
 
@@ -71,6 +72,9 @@ struct ChatPage {
   @State aiPrompt: string = '';  // AI角色的系统提示词
   @State isAILoading: boolean = false;  // AI是否正在响应
   @State isAIChat: boolean = false;  // 是否为AI聊天模式
+  @State currentBreakpoint: BreakpointType = BreakpointType.SM;  // 当前断点
+  // 气泡最大宽度（响应式，通过 AppStorage 传递给子组件）
+  private bubbleMaxWidth: number = 320;
 
   /**
    * 生命周期中只被调用一次，类似于iOS中的viewDidLoad、Android中的onCreate.
@@ -78,6 +82,9 @@ struct ChatPage {
   aboutToAppear() {
     // 添加事件监听
     this.addEvents();
+
+    // 设置初始气泡宽度
+    this.updateBubbleMaxWidth();
 
     let params = router.getParams() as Record<string, Object>;
     if (params) {
@@ -263,6 +270,15 @@ struct ChatPage {
   }
 
   /**
+   * 更新气泡最大宽度（响应式 — 手机 320vp，平板 480vp）。
+   */
+  updateBubbleMaxWidth() {
+    let tablet = isTabletOrLarger(this.currentBreakpoint);
+    this.bubbleMaxWidth = tablet ? 480 : 320;
+    AppStorage.setOrCreate<number>('bubbleMaxWidth', this.bubbleMaxWidth);
+  }
+
+  /**
    * 刷新连接状态。
    */
   refreshConnecteStatus() {
@@ -315,6 +331,18 @@ struct ChatPage {
 
   build() {
     Column() {
+      // 监听窗口宽度变化，更新断点和气泡宽度
+      Column() {}.width('100%').height(0)
+        .onAreaChange((oldValue: Area, newValue: Area) => {
+          let w = vp2px(newValue.width as number);
+          let widthVp = px2vp(w);
+          let bp = getBreakpoint(widthVp);
+          if (bp !== this.currentBreakpoint) {
+            this.currentBreakpoint = bp;
+            this.updateBubbleMaxWidth();
+          }
+        })
+
       // 聊天界面自定义标题栏
       CustomeTitleBar({ 
         connectStatus: this.connectStatus, 
