@@ -27,8 +27,7 @@ struct MainPage {
       // 监听窗口宽度变化，更新断点
       Column() {}.width('100%').height(0)
         .onAreaChange((oldValue: Area, newValue: Area) => {
-          let w = vp2px(newValue.width as number);
-          this.windowWidth = px2vp(w);
+          this.windowWidth = newValue.width as number;
           this.currentBreakpoint = getBreakpoint(this.windowWidth);
         })
       Column() {
@@ -335,38 +334,18 @@ struct MainPage {
     })
   }
 
-  // 获取AI角色的视觉配置
-  getAIStyle(id: string): { emoji: string, color: string, bgColor: string } {
-    switch (id) {
-      case 'ai_teacher':
-        return { emoji: '🎓', color: '#4A90D9', bgColor: '#EEF4FB' };
-      case 'ai_emotion':
-        return { emoji: '💜', color: '#C77DFF', bgColor: '#F8F0FF' };
-      case 'ai_interview':
-        return { emoji: '💼', color: '#2C3E6B', bgColor: '#EEF0F7' };
-      case 'ai_tarot':
-        return { emoji: '🔮', color: '#7B2D8E', bgColor: '#F8F0FA' };
-      case 'ai_answerbook':
-        return { emoji: '📖', color: '#C8A45C', bgColor: '#FDF8F0' };
-      default:
-        return { emoji: '🤖', color: '#666666', bgColor: '#F5F5F5' };
-    }
-  }
-
   // AI角色条目组件
   @Builder aiItem(ai: AICharacter) {
-    let style = this.getAIStyle(ai.id);
-
     Row() {
       // 左侧 emoji 头像
       Column() {
-        Text(style.emoji)
+        Text(ai.emoji)
           .fontSize(32)
       }
       .width(56)
       .height(56)
       .borderRadius(16)
-      .backgroundColor(style.bgColor)
+      .backgroundColor(ai.bgColor)
       .justifyContent(FlexAlign.Center)
       .alignItems(HorizontalAlign.Center)
 
@@ -381,9 +360,9 @@ struct MainPage {
           // 角色标签
           Text(ai.role)
             .fontSize(10)
-            .fontColor(style.color)
+            .fontColor(ai.color)
             .padding({ left: 6, right: 6, top: 2, bottom: 2 })
-            .backgroundColor(style.bgColor)
+            .backgroundColor(ai.bgColor)
             .borderRadius(4)
             .margin({ left: 8 })
         }

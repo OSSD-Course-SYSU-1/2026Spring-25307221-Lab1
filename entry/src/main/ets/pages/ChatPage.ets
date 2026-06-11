@@ -166,7 +166,7 @@ struct ChatPage {
         ];
         DeepSeekService.getInstance().chat(bookMessages).then((ans) => {
           this.bookAnswer = ans;
-        }).catch((err) => {
+        }).catch((err: Error) => {
           this.bookAnswer = '答案暂时被迷雾遮蔽…请再试一次。';
         });
         return;
@@ -425,8 +425,7 @@ struct ChatPage {
       // 监听窗口宽度变化，更新断点和气泡宽度
       Column() {}.width('100%').height(0)
         .onAreaChange((oldValue: Area, newValue: Area) => {
-          let w = vp2px(newValue.width as number);
-          let widthVp = px2vp(w);
+          let widthVp = newValue.width as number;
           let bp = getBreakpoint(widthVp);
           if (bp !== this.currentBreakpoint) {
             this.currentBreakpoint = bp;

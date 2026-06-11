@@ -8,6 +8,9 @@ export interface AICharacter {
   personality: string
   greeting: string
   prompt: string
+  emoji: string    // 卡片展示 emoji
+  color: string    // 主题色
+  bgColor: string  // 背景色
 }
 
 // AI角色列表 - HarmonyOS NEXT AI虚拟生活社区
@@ -34,7 +37,10 @@ export const aiCharacters: AICharacter[] = [
 【知识框架】
 【重点内容】
 【练习题】
-【学习建议】`
+【学习建议】`,
+    emoji: '🎓',
+    color: '#4A90D9',
+    bgColor: '#EEF4FB'
   },
   // 情绪中心
   {
@@ -54,7 +60,10 @@ export const aiCharacters: AICharacter[] = [
 4. 不批评用户
 5. 像朋友一样交流
 
-回复风格温暖自然。`
+回复风格温暖自然。`,
+    emoji: '💜',
+    color: '#C77DFF',
+    bgColor: '#F8F0FF'
   },
   // 求职中心
   {
@@ -76,7 +85,10 @@ export const aiCharacters: AICharacter[] = [
 回答结构：
 【面试问题】
 【评价】
-【建议】`
+【建议】`,
+    emoji: '💼',
+    color: '#2C3E6B',
+    bgColor: '#EEF0F7'
   },
   // 娱乐中心 - 塔罗
   {
@@ -87,7 +99,10 @@ export const aiCharacters: AICharacter[] = [
     description: '真实78张牌随机抽牌 · AI深度解读',
     personality: '神秘、温和、有仪式感',
     greeting: '🔮 欢迎来到塔罗的世界…\n\n请直接告诉我你想问的问题（感情、事业、学业都可以），我会从78张塔罗牌中为你随机抽取3张，结合你的问题进行深度解读。\n\n例如：「我喜欢的人对我什么感觉？」「这份工作适合我吗？」「最近的运势怎么样？」',
-    prompt: `（塔罗角色的系统提示词由 TarotService.getSystemPrompt() 动态提供，此处仅作占位。）`
+    prompt: `（塔罗角色的系统提示词由 TarotService.getSystemPrompt() 动态提供，此处仅作占位。）`,
+    emoji: '🔮',
+    color: '#7B2D8E',
+    bgColor: '#F8F0FA'
   },
   // 答案之书
   {
@@ -137,6 +152,9 @@ export const aiCharacters: AICharacter[] = [
 （一句话的神秘答案）
 ━━━━━━━━━━━━━
 
-⚠️ 仅供娱乐，请理性看待。`
+⚠️ 仅供娱乐，请理性看待。`,
+    emoji: '📖',
+    color: '#C8A45C',
+    bgColor: '#FDF8F0'
   }
 ];
