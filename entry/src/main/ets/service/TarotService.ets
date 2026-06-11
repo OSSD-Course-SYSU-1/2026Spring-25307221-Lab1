@@ -30,7 +30,7 @@ const TAROT_DECK: TarotCard[] = [
   { id: 3, name: "The Empress", name_cn: "女皇", image_url: "images/theempress.jpeg", type: "major" },
   { id: 4, name: "The Emperor", name_cn: "皇帝", image_url: "images/theemperor.jpeg", type: "major" },
   { id: 5, name: "The Hierophant", name_cn: "教皇", image_url: "images/thehierophant.jpeg", type: "major" },
-  { id: 6, name: "The Lovers", name_cn: "恋人", image_url: "images/TheLovers.jpg", type: "major" },
+  { id: 6, name: "The Lovers", name_cn: "恋人", image_url: "images/thelovers.jpg", type: "major" },
   { id: 7, name: "The Chariot", name_cn: "战车", image_url: "images/thechariot.jpeg", type: "major" },
   { id: 8, name: "Strength", name_cn: "力量", image_url: "images/thestrength.jpeg", type: "major" },
   { id: 9, name: "The Hermit", name_cn: "隐士", image_url: "images/thehermit.jpeg", type: "major" },
@@ -123,6 +123,13 @@ export class TarotService {
       TarotService.instance = new TarotService();
     }
     return TarotService.instance;
+  }
+
+  /**
+   * 获取全部78张牌数据。
+   */
+  getAllCards(): TarotCard[] {
+    return TAROT_DECK;
   }
 
   /**

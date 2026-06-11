@@ -26,7 +26,8 @@ import { MsgTimeView } from './components/msg_view/MsgTimeView';
 import { DeepSeekService, ChatMessage } from '../service/DeepSeekService';
 import { aiCharacters } from '../model/AICharacterData';
 import { BreakpointType, getBreakpoint, isTabletOrLarger } from './common/BreakpointSystem';
-import { TarotService } from '../service/TarotService';
+import { TarotService, DrawnCard } from '../service/TarotService';
+import { TarotDrawView } from './components/TarotDrawView';
 
 const TAG: string = '[ChatPage] '
 
@@ -73,6 +74,8 @@ struct ChatPage {
   @State aiPrompt: string = '';  // AI角色的系统提示词
   @State isAILoading: boolean = false;  // AI是否正在响应
   @State isAIChat: boolean = false;  // 是否为AI聊天模式
+  @State showTarotDrawer: boolean = false;  // 是否显示塔罗抽牌界面
+  private pendingTarotQuestion: string = '';  // 待抽牌的用户问题
   @State currentBreakpoint: BreakpointType = BreakpointType.SM;  // 当前断点
   // 气泡最大宽度（响应式，通过 AppStorage 传递给子组件）
   private bubbleMaxWidth: number = 320;
@@ -136,34 +139,24 @@ struct ChatPage {
       userMsg.sendStatus = MsgSendStatus.beReceived;
       msgProvider.putMessage(userMsg);
 
-      // 2. 构建聊天消息
-      let chatMessages: ChatMessage[] = [];
-
       if (isTarot) {
-        // === 塔罗特殊流程：真抽牌 + 展示牌面 + AI 解读 ===
-        let drawnCards = TarotService.getInstance().drawCards(3);
+        // === 塔罗互动流程：弹出选牌界面，让用户自己抽 ===
+        this.pendingTarotQuestion = userMessage;
+        this.isAILoading = false;  // 先释放锁，等用户选完牌再继续
+        this.showTarotDrawer = true;
+        return;  // 等 onTarotComplete 回调继续
+      }
 
-        // 展示抽到的牌（系统消息）
-        let cardDisplay = TarotService.getInstance().formatCardsForDisplay(drawnCards);
-        IMClientManager.getInstance().getMessageProvider().addSystemMessage(cardDisplay);
+      // 2. 构建聊天消息（普通 AI 流程：带多轮上下文）
+      let chatMessages: ChatMessage[] = [];
+      chatMessages.push({ role: 'system', content: this.aiPrompt });
 
-        // 使用 tarot 专用系统提示词
-        chatMessages.push({ role: 'system', content: TarotService.getInstance().getSystemPrompt() });
-
-        // 用户消息 = 问题 + 真实抽到的牌
-        let tarotUserPrompt = TarotService.getInstance().buildUserPrompt(userMessage, drawnCards);
-        chatMessages.push({ role: 'user', content: tarotUserPrompt });
-      } else {
-        // === 普通 AI 流程：带多轮上下文 ===
-        chatMessages.push({ role: 'system', content: this.aiPrompt });
-
-        let recentMessages = msgProvider.getRecentMessages(20);
-        for (let m of recentMessages) {
-          if (m.senderId === localUid) {
-            chatMessages.push({ role: 'user', content: m.content });
-          } else if (m.senderId === this.contactId) {
-            chatMessages.push({ role: 'assistant', content: m.content });
-          }
+      let recentMessages = msgProvider.getRecentMessages(20);
+      for (let m of recentMessages) {
+        if (m.senderId === localUid) {
+          chatMessages.push({ role: 'user', content: m.content });
+        } else if (m.senderId === this.contactId) {
+          chatMessages.push({ role: 'assistant', content: m.content });
         }
       }
 
@@ -182,6 +175,43 @@ struct ChatPage {
       ToolKits.showToast('AI 响应失败，请稍后重试');
     } finally {
       this.isAILoading = false;
+    }
+  }
+
+  /**
+   * 用户完成塔罗选牌后的回调。
+   */
+  async onTarotComplete(cards: DrawnCard[]) {
+    this.showTarotDrawer = false;
+
+    let msgProvider = IMClientManager.getInstance().getMessageProvider();
+
+    // 展示抽到的牌
+    let cardDisplay = TarotService.getInstance().formatCardsForDisplay(cards);
+    msgProvider.addSystemMessage(cardDisplay);
+
+    try {
+      this.isAILoading = true;
+
+      // 构建 Tarot 专用请求
+      let chatMessages: ChatMessage[] = [];
+      chatMessages.push({ role: 'system', content: TarotService.getInstance().getSystemPrompt() });
+      chatMessages.push({ role: 'user', content: TarotService.getInstance().buildUserPrompt(this.pendingTarotQuestion, cards) });
+
+      // 调用 AI
+      const aiResponse = await DeepSeekService.getInstance().chat(chatMessages);
+
+      // 添加回复
+      let aiMsg = new Message(this.contactId, this.contactName, Date.now(), aiResponse, MsgType.TYPE_TEXT);
+      msgProvider.putMessage(aiMsg);
+
+      this.scrollToBottom();
+    } catch (error) {
+      console.error(TAG + '塔罗解读失败: ' + JSON.stringify(error));
+      ToolKits.showToast('AI 解读失败，请稍后重试');
+    } finally {
+      this.isAILoading = false;
+      this.pendingTarotQuestion = '';
     }
   }
 
@@ -350,6 +380,7 @@ struct ChatPage {
   }
 
   build() {
+    Stack() {
     Column() {
       // 监听窗口宽度变化，更新断点和气泡宽度
       Column() {}.width('100%').height(0)
@@ -491,5 +522,15 @@ struct ChatPage {
     .backgroundColor(Color.White)
     // 适配流海屏（顶部状态栏透明并穿过，并透过底部上划操作区）
     .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP, SafeAreaEdge.BOTTOM])
+
+      // 塔罗抽牌全屏覆盖层
+      if (this.showTarotDrawer) {
+        TarotDrawView({
+          onComplete: (cards: DrawnCard[]) => {
+            this.onTarotComplete(cards);
+          }
+        })
+      }
+    }
   }
 }
