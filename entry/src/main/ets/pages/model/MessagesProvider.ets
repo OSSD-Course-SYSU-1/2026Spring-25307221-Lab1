@@ -125,10 +125,54 @@ export default class MessagesProvider {
   }
 
   /**
+   * 批量加入多条消息（用于 AI 对话初始化等场景）。
+   *
+   * @param messages 消息对象数组
+   */
+  putMessages(messages: Message[]): void {
+    if (!messages || messages.length === 0) {
+      return;
+    }
+
+    let startIndex = this.messages.length;
+
+    for (let i = 0; i < messages.length; i++) {
+      let previousMessage: Message | undefined = undefined;
+      if (i === 0 && startIndex > 0) {
+        // 第一条新消息的前一条是当前列表中最后一条
+        previousMessage = this.messages[startIndex - 1];
+      } else if (i > 0) {
+        // 后续新消息的前一条是上一条新消息
+        previousMessage = messages[i - 1];
+      }
+      MessagesProvider.setMessageShowTopTime(messages[i], previousMessage);
+      this.messages.push(messages[i]);
+    }
+
+    // 通知应用层更新 ui（只通知最后一条的索引，触发整体刷新）
+    IMClientManager.getInstance().getEmitter().emit(UIEvent.UIEVENT_messagesUpdate, []);
+  }
+
+  /**
+   * 获取最近 N 条消息（用于构建 AI 对话上下文）。
+   *
+   * @param count 要获取的消息数量
+   * @returns 最近的消息数组
+   */
+  getRecentMessages(count: number): Message[] {
+    if (count <= 0) {
+      return [];
+    }
+    let start = Math.max(0, this.messages.length - count);
+    return this.messages.slice(start);
+  }
+
+  /**
    * 清空所有消息。
    */
   clear(): void {
-    this.messages = [];
+    // 用 length = 0 清空而非 = []，保证外部持有的数组引用（如 MessagesDataSource）仍然有效
+    this.messages.length = 0;
   }
 
   /**

@@ -15,6 +15,7 @@ import { MsgView_normal } from './components/msg_view/NormalMsgView';
 import { MsgView_system } from './components/msg_view/SystemMsgView';
 import Message from './model/Message';
 import MsgType from './constants/MsgType';
+import MsgSendStatus from './constants/MsgSendStatus';
 import MessagesDataSource from './model/MessagesDataSource';
 import IMClientManager from '../IMClientManager';
 import UIEvent from './constants/UIEvent';
@@ -65,11 +66,11 @@ struct ChatPage {
   @State searchKeyword: string = '';   // 搜索关键词
   @State contactId: string = '';
   @State contactName: string = '';
-  @State simulatedMessages: Message[] = [];
   @State inputText: string = '';  // 输入框文本
   @State greeting: string = '';  // AI问候语
   @State aiPrompt: string = '';  // AI角色的系统提示词
   @State isAILoading: boolean = false;  // AI是否正在响应
+  @State isAIChat: boolean = false;  // 是否为AI聊天模式
 
   /**
    * 生命周期中只被调用一次，类似于iOS中的viewDidLoad、Android中的onCreate.
@@ -77,48 +78,37 @@ struct ChatPage {
   aboutToAppear() {
     // 添加事件监听
     this.addEvents();
-    
+
     let params = router.getParams() as Record<string, Object>;
     if (params) {
       this.contactId = (params['contactId'] as string) || '';
       this.contactName = (params['contactName'] as string) || '';
       this.greeting = (params['greeting'] as string) || '';
-      
-      // 查找对应的 AI 角色，获取 prompt
-      const aiCharacter = aiCharacters.find(ai => ai.id === this.contactId);
-      if (aiCharacter) {
-        this.aiPrompt = aiCharacter.prompt;
-      }
-      
-      if (this.contactId) {
-        this.loadSimulatedMessages();
+      this.isAIChat = (params['isAI'] as boolean) || false;
+
+      if (this.isAIChat) {
+        // AI 模式：清空旧消息，加载 greeting
+        IMClientManager.getInstance().getMessageProvider().clear();
+
+        // 查找对应的 AI 角色，获取 prompt
+        const aiCharacter = aiCharacters.find(ai => ai.id === this.contactId);
+        if (aiCharacter) {
+          this.aiPrompt = aiCharacter.prompt;
+        }
+
+        // 通过 MessagesProvider 加入 greeting 消息
+        let greetingText = this.greeting || `你好，我是${this.contactName}`;
+        let greetingMsg = new Message(this.contactId, this.contactName, Date.now(), greetingText, MsgType.TYPE_TEXT);
+        IMClientManager.getInstance().getMessageProvider().putMessage(greetingMsg);
+
+        // 刷新 DataSource 以触发 UI 更新
+        this.messagesDataSource.notifyDataReload();
       }
     }
   }
 
-  loadSimulatedMessages() {
-    // 获取当前登录用户ID
-    let localUid = ToolKits.getLocalUserUid() || 'me';
-    
-    // 创建模拟消息，设置不同的时间戳
-    let now = Date.now();
-    let greetingMessage = this.greeting || `你好，我是${this.contactName}`;
-    let msg1 = new Message(this.contactId, this.contactName, now - 180000, greetingMessage, MsgType.TYPE_TEXT);
-    msg1.showTopTime = true;  // 第一条消息总是显示时间
-    
-    let msg2 = new Message(localUid, '我', now - 60000, '今天天气真不错', MsgType.TYPE_TEXT);
-    // 与上一条消息间隔 120000ms (2分钟)，不超过2分钟，不显示时间
-    msg2.showTopTime = false;
-    
-    let msg3 = new Message(this.contactId, this.contactName, now, '是啊，下午出去走走吧', MsgType.TYPE_TEXT);
-    // 与上一条消息间隔 60000ms (1分钟)，不超过2分钟，不显示时间
-    msg3.showTopTime = false;
-    
-    this.simulatedMessages = [msg1, msg2, msg3];
-  }
-
   /**
-   * 发送消息到 DeepSeek AI
+   * 发送消息到 DeepSeek AI（带多轮对话上下文）。
    * @param userMessage 用户消息内容
    */
   async sendMessageToAI(userMessage: string) {
@@ -128,30 +118,38 @@ struct ChatPage {
 
     try {
       this.isAILoading = true;
-      
-      // 添加用户消息到列表
       let localUid = ToolKits.getLocalUserUid() || 'me';
+      let msgProvider = IMClientManager.getInstance().getMessageProvider();
+
+      // 1. 添加用户消息到全局消息缓存（sendStatus 置为已送达，不显示转圈）
       let userMsg = new Message(localUid, '我', Date.now(), userMessage, MsgType.TYPE_TEXT);
-      userMsg.showTopTime = true;
-      this.simulatedMessages.push(userMsg);
-      
-      // 构建聊天消息
-      const messages: ChatMessage[] = [
-        { role: 'system', content: this.aiPrompt },
-        { role: 'user', content: userMessage }
-      ];
-      
-      // 调用 DeepSeek API
-      const aiResponse = await DeepSeekService.getInstance().chat(messages);
-      
-      // 添加 AI 回复到列表
+      userMsg.sendStatus = MsgSendStatus.beReceived;  // AI 消息无需发送状态指示
+      msgProvider.putMessage(userMsg);
+
+      // 2. 从全局缓存获取最近的消息作为对话上下文（最近10轮 = 20条）
+      let recentMessages = msgProvider.getRecentMessages(20);
+      let chatMessages: ChatMessage[] = [{ role: 'system', content: this.aiPrompt }];
+
+      for (let m of recentMessages) {
+        // 跳过 system 消息（prompt），只取 user 和 assistant 角色
+        if (m.senderId === localUid) {
+          chatMessages.push({ role: 'user', content: m.content });
+        } else if (m.senderId === this.contactId) {
+          chatMessages.push({ role: 'assistant', content: m.content });
+        }
+        // 跳过其他 sender 的消息（如 system 消息）
+      }
+
+      // 3. 调用 DeepSeek API
+      const aiResponse = await DeepSeekService.getInstance().chat(chatMessages);
+
+      // 4. 添加 AI 回复到全局消息缓存
       let aiMsg = new Message(this.contactId, this.contactName, Date.now(), aiResponse, MsgType.TYPE_TEXT);
-      aiMsg.showTopTime = true;
-      this.simulatedMessages.push(aiMsg);
-      
-      // 滚动到底部
+      msgProvider.putMessage(aiMsg);
+
+      // 5. 滚动到底部
       this.scrollToBottom();
-      
+
     } catch (error) {
       console.error(TAG + '发送消息到 AI 失败: ' + JSON.stringify(error));
       ToolKits.showToast('AI 响应失败，请稍后重试');
@@ -360,104 +358,82 @@ struct ChatPage {
             this.searchKeyword = value;
           })
       }
-      // 聊天界面内容区
+      // 聊天界面内容区（AI 与 IM 统一使用 MessagesDataSource + LazyForEach）
       Column() {
         // List性能需极致优化的情况下，还可使用"组件复用"技术，详见官方资料：
         // https://developer.huawei.com/consumer/cn/doc/best-practices-V5/bpta-best-practices-long-list-V5#section36781044162218
-        if (this.contactId) {
-          // 从联系人跳转来的，使用模拟消息（可在此也加入搜索过滤，但为了清晰暂不加）
-          List({ scroller: this.scroller,space: 8 }) {
-            ForEach(this.simulatedMessages, (m: Message, index: number) => {
+        List({ scroller: this.scroller, space: 8 }) {
+          LazyForEach(this.messagesDataSource, (m: Message, index: number) => {
+            if (this.searchKeyword.length > 0 && !m.content.toLowerCase().includes(this.searchKeyword.toLowerCase())) {
+              ListItem() {}.visibility(Visibility.None).height(0)
+            } else {
               ListItem() {
                 Column() {
                   MsgTimeView({ message: m })
                   if (m.msgType === MsgType.TYPE_TEXT) {
                     MsgView_normal({ message: m })
-                  } // 其他类型酌情保留
-                }
-              }
-            }, (m: Message, index: number) => index.toString())
-          }
-          .layoutWeight(1)
-          // 监听组件触屏事件，确保触碰聊天列表时，能自动收起输入法软键盘，提升用户体验
-          .onTouch((event: TouchEvent) => {
-            // 收起软键盘
-            ToolKits.hideSoftInputMethod(this.getUIContext());
-          })
-          // 监听组件大小变化事件（用于实现当软键盘显示时，列表高度被压缩后，消息不能自动显示最后一条的问题）
-          .onSizeChange((oldValue: SizeOptions, newValue: SizeOptions) => {
-            let oldHeight = oldValue.height, newHeight = newValue.height;
-            oldHeight = (oldHeight === undefined ? 0 : oldHeight);
-            newHeight = (newHeight === undefined ? 0 : newHeight);
-            // 列表高度变小，可以认为是软键盘显示了
-            let toBeSmall = (newHeight > 0 && newHeight < oldHeight);
-            if (toBeSmall) {
-              // 消息列表滚动到底部，确保最新一条消息被显示
-              this.scrollToBottom();
-            }
-          })
-          .scrollBar(BarState.Off)
-          .edgeEffect(EdgeEffect.Spring)
-          .width("100%")
-          .height('100%')
-          .layoutWeight(1)
-          .listDirection(Axis.Vertical)
-        } else {
-          // 原有逻辑（包含搜索功能）
-          List({ scroller: this.scroller }) {
-            LazyForEach(this.messagesDataSource, (m: Message, index: number) => {
-              if (this.searchKeyword.length > 0 && !m.content.toLowerCase().includes(this.searchKeyword.toLowerCase())) {
-                ListItem() {}.visibility(Visibility.None).height(0)
-              } else {
-                ListItem() {
-                  Column() {
-                    MsgTimeView({ message: m })
-                    if (m.msgType === MsgType.TYPE_TEXT) {
-                      MsgView_normal({ message: m })
-                    } else {
-                      MsgView_system({ message: m })
-                    }
+                  } else {
+                    MsgView_system({ message: m })
                   }
-                  // 高亮：匹配关键词的消息添加淡黄色背景
-                  .backgroundColor(
-                    this.searchKeyword.length > 0 && m.content.toLowerCase().includes(this.searchKeyword.toLowerCase())
-                      ? '#FFF3CD' : Color.Transparent
-                  )
                 }
+                // 高亮：匹配关键词的消息添加淡黄色背景
+                .backgroundColor(
+                  this.searchKeyword.length > 0 && m.content.toLowerCase().includes(this.searchKeyword.toLowerCase())
+                    ? '#FFF3CD' : Color.Transparent
+                )
               }
-            }, (m: Message, index: number) => MessagesDataSource.messageItemKey(m))
-          }
-          // 监听组件触屏事件，确保触碰聊天列表时，能自动收起输入法软键盘，提升用户体验
-          .onTouch((event: TouchEvent) => {
-            // 收起软键盘
-            ToolKits.hideSoftInputMethod(this.getUIContext());
-          })
-          // 监听组件大小变化事件（用于实现当软键盘显示时，列表高度被压缩后，消息不能自动显示最后一条的问题）
-          .onSizeChange((oldValue: SizeOptions, newValue: SizeOptions) => {
-            let oldHeight = oldValue.height, newHeight = newValue.height;
-            oldHeight = (oldHeight === undefined ? 0 : oldHeight);
-            newHeight = (newHeight === undefined ? 0 : newHeight);
-            // 列表高度变小，可以认为是软键盘显示了
-            let toBeSmall = (newHeight > 0 && newHeight < oldHeight);
-            if (toBeSmall) {
-              // 消息列表滚动到底部，确保最新一条消息被显示
-              this.scrollToBottom();
             }
-          })
-          .scrollBar(BarState.Off)
-          .edgeEffect(EdgeEffect.Spring)
-          .width("100%")
-          .height('100%')
-          .layoutWeight(1)
-          .listDirection(Axis.Vertical)
+          }, (m: Message, index: number) => MessagesDataSource.messageItemKey(m))
         }
+        // 监听组件触屏事件，确保触碰聊天列表时，能自动收起输入法软键盘，提升用户体验
+        .onTouch((event: TouchEvent) => {
+          // 收起软键盘
+          ToolKits.hideSoftInputMethod(this.getUIContext());
+        })
+        // 监听组件大小变化事件（用于实现当软键盘显示时，列表高度被压缩后，消息不能自动显示最后一条的问题）
+        .onSizeChange((oldValue: SizeOptions, newValue: SizeOptions) => {
+          let oldHeight = oldValue.height, newHeight = newValue.height;
+          oldHeight = (oldHeight === undefined ? 0 : oldHeight);
+          newHeight = (newHeight === undefined ? 0 : newHeight);
+          // 列表高度变小，可以认为是软键盘显示了
+          let toBeSmall = (newHeight > 0 && newHeight < oldHeight);
+          if (toBeSmall) {
+            // 消息列表滚动到底部，确保最新一条消息被显示
+            this.scrollToBottom();
+          }
+        })
+        .scrollBar(BarState.Off)
+        .edgeEffect(EdgeEffect.Spring)
+        .width("100%")
+        .height('100%')
+        .layoutWeight(1)
+        .listDirection(Axis.Vertical)
       }
       .backgroundColor("#f0f2f6")
       .layoutWeight(1)
 
+      // AI 思考中指示器
+      if (this.isAIChat && this.isAILoading) {
+        Row() {
+          LoadingProgress()
+            .width(16)
+            .height(16)
+            .color('#999999')
+          Text(this.contactId === 'ai_tarot' ? '🔮 正在洗牌抽牌…' : '🤔 正在思考…')
+            .fontSize(12)
+            .fontColor('#999999')
+            .margin({ left: 6 })
+        }
+        .width('100%')
+        .padding({ left: 16, top: 6, bottom: 6 })
+        .backgroundColor('#f0f2f6')
+      }
+
       // 底部消息输入区
-      ChatInputView({ 
-        onSendMessage: this.aiPrompt ? (message: string) => {
+      ChatInputView({
+        isAI: this.isAIChat,
+        receiverId: this.contactId,
+        onSendMessage: this.isAIChat ? (message: string) => {
           this.sendMessageToAI(message);
         } : undefined
       })

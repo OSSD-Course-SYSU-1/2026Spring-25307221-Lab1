@@ -29,7 +29,9 @@ export struct MsgContentView_text {
             types: [TextDataDetectorType.URL, TextDataDetectorType.PHONE_NUMBER, TextDataDetectorType.EMAIL]
           })
           .fontSize(14)
+          .wordBreak(WordBreak.BREAK_WORD)  // 长单词/URL 可断行
       }
+      .constraintSize({ maxWidth: 320 })  // 限制气泡最大宽度，确保长文本自动换行
       // 消息气泡四周的空白
       .padding(this.message.isOutgoing() ? { top: 14, bottom: 14, left: 14, right: 16 } : { top: 14, bottom: 14, left: 16, right: 14 })
       // 气泡图片的不可拉伸区

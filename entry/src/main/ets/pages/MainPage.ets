@@ -168,7 +168,7 @@ struct MainPage {
   // 发现页面内容
   @Builder DiscoveryContent() {
     Column() {
-      // 顶部搜索栏
+      // 顶部标题栏
       Row() {
         Text('发现')
           .fontSize(20)
@@ -180,29 +180,18 @@ struct MainPage {
       .justifyContent(FlexAlign.Start)
       .alignItems(VerticalAlign.Center)
 
-      // 功能列表
-      List({ space: 1 }) {
-        ListItem() {
-          this.ListMenuItemBuilder('朋友圈', $r('app.media.app_icon'))
-        }
-        ListItem() {
-          this.ListMenuItemBuilder('视频号', $r('app.media.app_icon'))
-        }
-        ListItem() {
-          this.ListMenuItemBuilder('扫一扫', $r('app.media.app_icon'))
-        }
-        ListItem() {
-          this.ListMenuItemBuilder('摇一摇', $r('app.media.app_icon'))
-        }
-        ListItem() {
-          this.ListMenuItemBuilder('看一看', $r('app.media.app_icon'))
-        }
-        ListItem() {
-          this.ListMenuItemBuilder('搜一搜', $r('app.media.app_icon'))
-        }
+      // 暂无内容
+      Column() {
+        Text('🚧')
+          .fontSize(48)
+          .margin({ bottom: 12 })
+        Text('更多功能即将上线')
+          .fontSize(14)
+          .fontColor('#999999')
       }
       .width('100%')
       .layoutWeight(1)
+      .justifyContent(FlexAlign.Center)
     }
     .width('100%')
     .height('100%')
@@ -254,29 +243,15 @@ struct MainPage {
       .backgroundColor(Color.White)
       .margin({ bottom: 10 })
 
-      // 功能列表
+      // 功能列表（仅保留有实际功能的条目）
       List({ space: 1 }) {
-        ListItem() {
-          this.ListMenuItemBuilder('服务', $r('app.media.app_icon'))
-        }
-        ListItem() {
-          this.ListMenuItemBuilder('收藏', $r('app.media.app_icon'))
-        }
-        ListItem() {
-          this.ListMenuItemBuilder('朋友圈', $r('app.media.app_icon'))
-        }
-        ListItem() {
-          this.ListMenuItemBuilder('卡包', $r('app.media.app_icon'))
-        }
-        ListItem() {
-          this.ListMenuItemBuilder('表情', $r('app.media.app_icon'))
-        }
         ListItem() {
           this.ListMenuItemBuilder('设置', $r('app.media.app_icon'))
         }
       }
       .width('100%')
-      .layoutWeight(1)
+
+      Blank()
     }
     .width('100%')
     .height('100%')
@@ -324,7 +299,8 @@ struct MainPage {
         url: 'pages/ChatPage',
         params: {
           contactId: contact.id,
-          contactName: contact.name
+          contactName: contact.name,
+          isAI: false
         }
       });
     })
@@ -360,7 +336,8 @@ struct MainPage {
         params: {
           contactId: ai.id,
           contactName: ai.name,
-          greeting: ai.greeting  // 传递问候语
+          greeting: ai.greeting,  // 传递问候语
+          isAI: true
         }
       });
     })

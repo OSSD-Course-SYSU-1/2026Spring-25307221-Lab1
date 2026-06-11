@@ -1,10 +1,10 @@
 import http from '@ohos.net.http';
+import { ApiConfig } from '../pages/common/ApiConfig';
 
 const TAG: string = '[DeepSeekService] ';
 
 // DeepSeek API 配置
 const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
-const DEEPSEEK_API_KEY = 'YOUR_DEEPSEEK_API_KEY'; // 请替换为您的 API Key
 
 // 消息结构
 export interface ChatMessage {
@@ -66,15 +66,22 @@ export class DeepSeekService {
   }
 
   /**
+   * 获取或创建 HTTP 请求对象（复用连接）。
+   */
+  private getHttpRequest(): http.HttpRequest {
+    if (this.httpRequest === null) {
+      this.httpRequest = http.createHttp();
+    }
+    return this.httpRequest;
+  }
+
+  /**
    * 发送聊天消息到 DeepSeek
    * @param messages 聊天消息列表
    * @returns AI 回复内容
    */
   async chat(messages: ChatMessage[]): Promise<string> {
     try {
-      // 创建 HTTP 请求
-      this.httpRequest = http.createHttp();
-      
       // 构建请求体
       const requestBody: DeepSeekRequestBody = {
         model: 'deepseek-chat',
@@ -87,7 +94,7 @@ export class DeepSeekService {
       // 构建请求头
       const requestHeader: HttpRequestHeader = {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
+        'Authorization': `Bearer ${ApiConfig.DEEPSEEK_API_KEY}`
       };
 
       // 构建请求选项
@@ -99,15 +106,15 @@ export class DeepSeekService {
         readTimeout: 60000
       };
 
-      // 发送 POST 请求
-      const response = await this.httpRequest.request(DEEPSEEK_API_URL, options);
+      // 发送 POST 请求（复用 HTTP 连接）
+      const response = await this.getHttpRequest().request(DEEPSEEK_API_URL, options);
 
       console.info(TAG + '收到响应: ' + JSON.stringify(response));
 
       // 检查响应状态
       if (response.responseCode === 200) {
         const result: DeepSeekResponse = JSON.parse(response.result as string) as DeepSeekResponse;
-        
+
         if (result.choices && result.choices.length > 0) {
           const content = result.choices[0].message.content;
           console.info(TAG + 'AI 回复: ' + content);
@@ -121,12 +128,6 @@ export class DeepSeekService {
     } catch (error) {
       console.error(TAG + '调用 DeepSeek 失败: ' + JSON.stringify(error));
       throw new Error('DeepSeek API 调用失败');
-    } finally {
-      // 销毁 HTTP 请求对象
-      if (this.httpRequest !== null) {
-        this.httpRequest.destroy();
-        this.httpRequest = null;
-      }
     }
   }
 

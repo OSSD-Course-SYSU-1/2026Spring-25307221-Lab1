@@ -29,6 +29,16 @@ export struct ChatInputView {
   
   // AI 聊天回调函数（可选）
   onSendMessage?: (message: string) => void;
+  // AI 模式标识（为 true 时隐藏 receiverInput）
+  @Prop isAI: boolean = false;
+  // 预设的接收者 ID（从联系人进入时自动填充）
+  @Prop receiverId: string = '';
+
+  aboutToAppear() {
+    if (this.receiverId && this.receiverId.length > 0) {
+      this.receiverInput = this.receiverId;
+    }
+  }
 
   // 发送消息实现方法
   doSendMessage() {
@@ -71,20 +81,22 @@ export struct ChatInputView {
   build() {
 
     Row() {
-      TextInput({
-        placeholder: "对方ID", text: $$this.receiverInput
-      })
-        .backgroundColor('#f5f7fa')
-        .width(56)
-        .height(34)
-        // .onChange((msg: string) => {
-        //   this.message = msg
-        // })
-        .fontSize(13)
-        .borderRadius(8)
-        .padding({ left: 6, right: 6 })
-        .placeholderFont({ size: 14 })
-        .placeholderColor('#a1a7af')
+      if (!this.isAI) {
+        TextInput({
+          placeholder: "对方ID", text: $$this.receiverInput
+        })
+          .backgroundColor('#f5f7fa')
+          .width(56)
+          .height(34)
+          // .onChange((msg: string) => {
+          //   this.message = msg
+          // })
+          .fontSize(13)
+          .borderRadius(8)
+          .padding({ left: 6, right: 6 })
+          .placeholderFont({ size: 14 })
+          .placeholderColor('#a1a7af')
+      }
 
       TextInput({
         placeholder: "请输入聊天内容，按发送键提交", text: $$this.messageInput

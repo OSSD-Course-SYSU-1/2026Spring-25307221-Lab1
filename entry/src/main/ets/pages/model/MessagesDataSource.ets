@@ -46,7 +46,7 @@ export default class MessagesDataSource extends BasicDataSource<Message> {
    * @returns 计算出的key
    */
   static messageItemKey(m: Message) {
-    // 优化点：给更新的消息对象加个最近更新时间戳，这应该是个更通用的key计算项，不然一旦变更内容多了，这个key的计算就不那么优雅了
-    return m.msgType + '-' + m.fingerPrintOfProtocal + '-' + m.sendStatus;
+    // 消息时间戳保证 key 唯一性（尤其 AI 消息没有 fingerPrint）
+    return m.msgType + '-' + m.fingerPrintOfProtocal + '-' + m.sendStatus + '-' + m.date;
   }
 }
