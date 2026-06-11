@@ -28,6 +28,7 @@ import { aiCharacters } from '../model/AICharacterData';
 import { BreakpointType, getBreakpoint, isTabletOrLarger } from './common/BreakpointSystem';
 import { TarotService, DrawnCard } from '../service/TarotService';
 import { TarotDrawView } from './components/TarotDrawView';
+import { AnswerBookView } from './components/AnswerBookView';
 
 const TAG: string = '[ChatPage] '
 
@@ -76,6 +77,9 @@ struct ChatPage {
   @State isAIChat: boolean = false;  // 是否为AI聊天模式
   @State showTarotDrawer: boolean = false;  // 是否显示塔罗抽牌界面
   private pendingTarotQuestion: string = '';  // 待抽牌的用户问题
+  @State showBookView: boolean = false;  // 是否显示答案之书翻页
+  @State bookQuestion: string = '';      // 答案之书的问题
+  @State bookAnswer: string = '';        // 答案之书的答案
   @State currentBreakpoint: BreakpointType = BreakpointType.SM;  // 当前断点
   // 气泡最大宽度（响应式，通过 AppStorage 传递给子组件）
   private bubbleMaxWidth: number = 320;
@@ -133,6 +137,7 @@ struct ChatPage {
       let localUid = ToolKits.getLocalUserUid() || 'me';
       let msgProvider = IMClientManager.getInstance().getMessageProvider();
       let isTarot = (this.contactId === 'ai_tarot');
+      let isBook = (this.contactId === 'ai_answerbook');
 
       // 1. 添加用户消息到全局消息缓存
       let userMsg = new Message(localUid, '我', Date.now(), userMessage, MsgType.TYPE_TEXT);
@@ -142,9 +147,29 @@ struct ChatPage {
       if (isTarot) {
         // === 塔罗互动流程：弹出选牌界面，让用户自己抽 ===
         this.pendingTarotQuestion = userMessage;
-        this.isAILoading = false;  // 先释放锁，等用户选完牌再继续
+        this.isAILoading = false;
         this.showTarotDrawer = true;
-        return;  // 等 onTarotComplete 回调继续
+        return;
+      }
+
+      if (isBook) {
+        // === 答案之书互动流程：翻书动画 + AI 生成答案 ===
+        this.bookQuestion = userMessage;
+        this.bookAnswer = '';
+        this.isAILoading = false;
+        this.showBookView = true;
+
+        // 后台并行调用 AI
+        let bookMessages: ChatMessage[] = [
+          { role: 'system', content: this.aiPrompt },
+          { role: 'user', content: userMessage }
+        ];
+        DeepSeekService.getInstance().chat(bookMessages).then((ans) => {
+          this.bookAnswer = ans;
+        }).catch((err) => {
+          this.bookAnswer = '答案暂时被迷雾遮蔽…请再试一次。';
+        });
+        return;
       }
 
       // 2. 构建聊天消息（普通 AI 流程：带多轮上下文）
@@ -176,6 +201,21 @@ struct ChatPage {
     } finally {
       this.isAILoading = false;
     }
+  }
+
+  /**
+   * 答案之书关闭回调——将答案加入聊天。
+   */
+  onBookClose() {
+    this.showBookView = false;
+    let msgProvider = IMClientManager.getInstance().getMessageProvider();
+    let answer = this.bookAnswer || '答案暂时被迷雾遮蔽…请再试一次。';
+    let bookMsg = new Message(this.contactId, this.contactName, Date.now(),
+      '📖 *书页轻轻翻动…停在了属于你的那一页…*\n\n' + answer, MsgType.TYPE_TEXT);
+    msgProvider.putMessage(bookMsg);
+    this.scrollToBottom();
+    this.bookAnswer = '';
+    this.bookQuestion = '';
   }
 
   /**
@@ -528,6 +568,17 @@ struct ChatPage {
         TarotDrawView({
           onComplete: (cards: DrawnCard[]) => {
             this.onTarotComplete(cards);
+          }
+        })
+      }
+
+      // 答案之书翻页覆盖层
+      if (this.showBookView) {
+        AnswerBookView({
+          question: this.bookQuestion,
+          answer: this.bookAnswer,
+          onClose: () => {
+            this.onBookClose();
           }
         })
       }
