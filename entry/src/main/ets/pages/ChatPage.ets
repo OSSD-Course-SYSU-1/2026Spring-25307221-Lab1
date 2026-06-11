@@ -26,6 +26,7 @@ import { MsgTimeView } from './components/msg_view/MsgTimeView';
 import { DeepSeekService, ChatMessage } from '../service/DeepSeekService';
 import { aiCharacters } from '../model/AICharacterData';
 import { BreakpointType, getBreakpoint, isTabletOrLarger } from './common/BreakpointSystem';
+import { TarotService } from '../service/TarotService';
 
 const TAG: string = '[ChatPage] '
 
@@ -116,6 +117,7 @@ struct ChatPage {
 
   /**
    * 发送消息到 DeepSeek AI（带多轮对话上下文）。
+   * 塔罗角色会先真抽牌，再送 AI 解读。
    * @param userMessage 用户消息内容
    */
   async sendMessageToAI(userMessage: string) {
@@ -127,24 +129,42 @@ struct ChatPage {
       this.isAILoading = true;
       let localUid = ToolKits.getLocalUserUid() || 'me';
       let msgProvider = IMClientManager.getInstance().getMessageProvider();
+      let isTarot = (this.contactId === 'ai_tarot');
 
-      // 1. 添加用户消息到全局消息缓存（sendStatus 置为已送达，不显示转圈）
+      // 1. 添加用户消息到全局消息缓存
       let userMsg = new Message(localUid, '我', Date.now(), userMessage, MsgType.TYPE_TEXT);
-      userMsg.sendStatus = MsgSendStatus.beReceived;  // AI 消息无需发送状态指示
+      userMsg.sendStatus = MsgSendStatus.beReceived;
       msgProvider.putMessage(userMsg);
 
-      // 2. 从全局缓存获取最近的消息作为对话上下文（最近10轮 = 20条）
-      let recentMessages = msgProvider.getRecentMessages(20);
-      let chatMessages: ChatMessage[] = [{ role: 'system', content: this.aiPrompt }];
+      // 2. 构建聊天消息
+      let chatMessages: ChatMessage[] = [];
 
-      for (let m of recentMessages) {
-        // 跳过 system 消息（prompt），只取 user 和 assistant 角色
-        if (m.senderId === localUid) {
-          chatMessages.push({ role: 'user', content: m.content });
-        } else if (m.senderId === this.contactId) {
-          chatMessages.push({ role: 'assistant', content: m.content });
+      if (isTarot) {
+        // === 塔罗特殊流程：真抽牌 + 展示牌面 + AI 解读 ===
+        let drawnCards = TarotService.getInstance().drawCards(3);
+
+        // 展示抽到的牌（系统消息）
+        let cardDisplay = TarotService.getInstance().formatCardsForDisplay(drawnCards);
+        IMClientManager.getInstance().getMessageProvider().addSystemMessage(cardDisplay);
+
+        // 使用 tarot 专用系统提示词
+        chatMessages.push({ role: 'system', content: TarotService.getInstance().getSystemPrompt() });
+
+        // 用户消息 = 问题 + 真实抽到的牌
+        let tarotUserPrompt = TarotService.getInstance().buildUserPrompt(userMessage, drawnCards);
+        chatMessages.push({ role: 'user', content: tarotUserPrompt });
+      } else {
+        // === 普通 AI 流程：带多轮上下文 ===
+        chatMessages.push({ role: 'system', content: this.aiPrompt });
+
+        let recentMessages = msgProvider.getRecentMessages(20);
+        for (let m of recentMessages) {
+          if (m.senderId === localUid) {
+            chatMessages.push({ role: 'user', content: m.content });
+          } else if (m.senderId === this.contactId) {
+            chatMessages.push({ role: 'assistant', content: m.content });
+          }
         }
-        // 跳过其他 sender 的消息（如 system 消息）
       }
 
       // 3. 调用 DeepSeek API
