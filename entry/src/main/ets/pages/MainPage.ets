@@ -75,16 +75,19 @@ struct MainPage {
           TabContent() {
             Column() {
               // 顶部标题栏
-              Row() {
+              Column() {
                 Text('AI广场')
-                  .fontSize(20)
+                  .fontSize(22)
                   .fontWeight(FontWeight.Bold)
+
+                Text('选择你的AI伙伴，开始对话')
+                  .fontSize(12)
+                  .fontColor('#999999')
+                  .margin({ top: 4 })
               }
               .width('100%')
-              .height(56)
-              .padding({ left: 16, right: 16 })
-              .justifyContent(FlexAlign.Start)
-              .alignItems(VerticalAlign.Center)
+              .alignItems(HorizontalAlign.Start)
+              .padding({ left: 16, right: 16, top: 12, bottom: 8 })
 
               // AI角色网格（手机1列，平板2列 — 一次开发多端部署）
               Grid() {
@@ -95,11 +98,11 @@ struct MainPage {
                 }, (ai: AICharacter) => ai.id)
               }
               .columnsTemplate(isTabletOrLarger(this.currentBreakpoint) ? '1fr 1fr' : '1fr')
-              .columnsGap(8)
-              .rowsGap(4)
+              .columnsGap(12)
+              .rowsGap(12)
               .width('100%')
               .layoutWeight(1)
-              .padding({ left: isTabletOrLarger(this.currentBreakpoint) ? 8 : 0, right: isTabletOrLarger(this.currentBreakpoint) ? 8 : 0 })
+              .padding({ left: 14, right: 14, top: 8 })
             }
             .width('100%')
             .height('100%')
@@ -332,37 +335,91 @@ struct MainPage {
     })
   }
 
+  // 获取AI角色的视觉配置
+  getAIStyle(id: string): { emoji: string, color: string, bgColor: string } {
+    switch (id) {
+      case 'ai_teacher':
+        return { emoji: '🎓', color: '#4A90D9', bgColor: '#EEF4FB' };
+      case 'ai_emotion':
+        return { emoji: '💜', color: '#C77DFF', bgColor: '#F8F0FF' };
+      case 'ai_interview':
+        return { emoji: '💼', color: '#2C3E6B', bgColor: '#EEF0F7' };
+      case 'ai_tarot':
+        return { emoji: '🔮', color: '#7B2D8E', bgColor: '#F8F0FA' };
+      case 'ai_answerbook':
+        return { emoji: '📖', color: '#C8A45C', bgColor: '#FDF8F0' };
+      default:
+        return { emoji: '🤖', color: '#666666', bgColor: '#F5F5F5' };
+    }
+  }
+
   // AI角色条目组件
   @Builder aiItem(ai: AICharacter) {
+    let style = this.getAIStyle(ai.id);
+
     Row() {
-      Image(ai.avatar)
-        .width(48).height(48)
-        .borderRadius(24)
-        .margin(10)
-      
+      // 左侧 emoji 头像
       Column() {
-        Text(ai.name)
-          .fontSize(18)
-          .fontWeight(FontWeight.Medium)
-        
+        Text(style.emoji)
+          .fontSize(32)
+      }
+      .width(56)
+      .height(56)
+      .borderRadius(16)
+      .backgroundColor(style.bgColor)
+      .justifyContent(FlexAlign.Center)
+      .alignItems(HorizontalAlign.Center)
+
+      // 右侧信息
+      Column() {
+        Row() {
+          Text(ai.name)
+            .fontSize(17)
+            .fontWeight(FontWeight.Bold)
+            .fontColor('#1a1a1a')
+
+          // 角色标签
+          Text(ai.role)
+            .fontSize(10)
+            .fontColor(style.color)
+            .padding({ left: 6, right: 6, top: 2, bottom: 2 })
+            .backgroundColor(style.bgColor)
+            .borderRadius(4)
+            .margin({ left: 8 })
+        }
+
         Text(ai.description)
-          .fontSize(14)
-          .fontColor('#999999')
+          .fontSize(13)
+          .fontColor('#888888')
+          .margin({ top: 6 })
+          .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
+
+        // 个性标签
+        Text(ai.personality)
+          .fontSize(11)
+          .fontColor('#aaaaaa')
           .margin({ top: 4 })
+          .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
       }
       .alignItems(HorizontalAlign.Start)
       .layoutWeight(1)
-      .margin({ left: 10 })
+      .margin({ left: 14 })
     }
     .width('100%')
-    .padding(5)
+    .padding({ top: 14, bottom: 14, left: 14, right: 16 })
+    .backgroundColor(Color.White)
+    .borderRadius(14)
+    .border({ width: 1, color: '#F0F0F0' })
+    .shadow({ radius: 6, color: '#0000000a', offsetX: 0, offsetY: 2 })
     .onClick(() => {
       router.pushUrl({
         url: 'pages/ChatPage',
         params: {
           contactId: ai.id,
           contactName: ai.name,
-          greeting: ai.greeting,  // 传递问候语
+          greeting: ai.greeting,
           isAI: true
         }
       });
