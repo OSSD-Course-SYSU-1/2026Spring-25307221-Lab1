@@ -88,7 +88,7 @@ struct MainPage {
               .alignItems(HorizontalAlign.Start)
               .padding({ left: 16, right: 16, top: 12, bottom: 8 })
 
-              // AI角色网格（手机1列，平板2列 — 一次开发多端部署）
+              // AI角色列表（竖排单列）
               Grid() {
                 ForEach(aiCharacters, (ai: AICharacter) => {
                   GridItem() {
@@ -96,8 +96,7 @@ struct MainPage {
                   }
                 }, (ai: AICharacter) => ai.id)
               }
-              .columnsTemplate(isTabletOrLarger(this.currentBreakpoint) ? '1fr 1fr' : '1fr')
-              .columnsGap(12)
+              .columnsTemplate('1fr')
               .rowsGap(12)
               .width('100%')
               .layoutWeight(1)
