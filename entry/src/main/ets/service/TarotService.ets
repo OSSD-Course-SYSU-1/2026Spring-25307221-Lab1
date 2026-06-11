@@ -129,10 +129,15 @@ export class TarotService {
    * Fisher-Yates 洗牌算法 —— 随机打乱整个牌组。
    */
   fisherYatesShuffle(deck: TarotCard[]): TarotCard[] {
-    let shuffled = [...deck];
+    let shuffled: TarotCard[] = [];
+    for (let k = 0; k < deck.length; k++) {
+      shuffled.push(deck[k]);
+    }
     for (let i = shuffled.length - 1; i > 0; i--) {
       let j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      let temp = shuffled[i];
+      shuffled[i] = shuffled[j];
+      shuffled[j] = temp;
     }
     return shuffled;
   }
@@ -146,17 +151,24 @@ export class TarotService {
     let shuffled = this.fisherYatesShuffle(TAROT_DECK);
     let selected = shuffled.slice(0, count);
     let positions: string[] = ['过去', '现在', '未来'];
+    let result: DrawnCard[] = [];
 
-    return selected.map((card, index) => ({
-      id: card.id,
-      name: card.name,
-      name_cn: card.name_cn,
-      image_url: card.image_url,
-      type: card.type,
-      suit: card.suit,
-      isReversed: Math.random() < 0.5,
-      position: positions[index] || `第${index + 1}张`
-    }));
+    for (let i = 0; i < selected.length; i++) {
+      let card = selected[i];
+      let drawn: DrawnCard = {
+        id: card.id,
+        name: card.name,
+        name_cn: card.name_cn,
+        image_url: card.image_url,
+        type: card.type,
+        suit: card.suit,
+        isReversed: Math.random() < 0.5,
+        position: positions[i] || '第' + (i + 1).toString() + '张'
+      };
+      result.push(drawn);
+    }
+
+    return result;
   }
 
   /**
