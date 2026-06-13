@@ -25,6 +25,7 @@ import { common } from '@kit.AbilityKit';
 import { MsgTimeView } from './components/msg_view/MsgTimeView';
 import { DeepSeekService, ChatMessage } from '../service/DeepSeekService';
 import { aiCharacters } from '../model/AICharacterData';
+import { aiTools } from '../model/ToolData';
 import { BreakpointType, getBreakpoint, isTabletOrLarger } from './common/BreakpointSystem';
 import { TarotService, DrawnCard } from '../service/TarotService';
 import { TarotDrawView } from './components/TarotDrawView';
@@ -101,14 +102,22 @@ struct ChatPage {
       this.greeting = (params['greeting'] as string) || '';
       this.isAIChat = (params['isAI'] as boolean) || false;
 
+      // 工具自定义参数
+      let customPrompt = (params['customPrompt'] as string) || '';
+      let toolAction = (params['toolAction'] as string) || '';
+
       if (this.isAIChat) {
         // AI 模式：清空旧消息，加载 greeting
         IMClientManager.getInstance().getMessageProvider().clear();
 
-        // 查找对应的 AI 角色，获取 prompt
-        const aiCharacter = aiCharacters.find(ai => ai.id === this.contactId);
-        if (aiCharacter) {
-          this.aiPrompt = aiCharacter.prompt;
+        // 优先使用自定义 prompt（来自工具箱），否则从 AI 角色中查找
+        if (customPrompt) {
+          this.aiPrompt = customPrompt;
+        } else {
+          const aiCharacter = aiCharacters.find(ai => ai.id === this.contactId);
+          if (aiCharacter) {
+            this.aiPrompt = aiCharacter.prompt;
+          }
         }
 
         // 通过 MessagesProvider 加入 greeting 消息
@@ -137,7 +146,7 @@ struct ChatPage {
       let localUid = ToolKits.getLocalUserUid() || 'me';
       let msgProvider = IMClientManager.getInstance().getMessageProvider();
       let isTarot = (this.contactId === 'ai_tarot');
-      let isBook = (this.contactId === 'ai_answerbook');
+      let isBook = (this.contactId === 'ai_answerbook' || this.contactId === 'tool_answerbook');
 
       // 1. 添加用户消息到全局消息缓存
       let userMsg = new Message(localUid, '我', Date.now(), userMessage, MsgType.TYPE_TEXT);
