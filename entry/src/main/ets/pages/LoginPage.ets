@@ -342,6 +342,20 @@ struct LoginPage {
               router.pushUrl({ url: 'pages/RegisterPage' });
             })
 
+            // 跳过登录按钮
+            Button() {
+              Text('跳过登录，直接体验')
+                .fontSize(14)
+                .fontColor('#999999')
+            }
+            .width('100%')
+            .height(40)
+            .backgroundColor(Color.Transparent)
+            .margin({ top: 8 })
+            .onClick(() => {
+              router.replaceUrl({ url: 'pages/MainPage' });
+            })
+
             Blank()
 
             Column() {
