@@ -152,7 +152,12 @@ struct ChatPage {
    * @param userMessage 用户消息内容
    */
   async sendMessageToAI(userMessage: string) {
-    if (!this.aiPrompt || this.isAILoading) {
+    let isBook = (this.contactId === 'ai_answerbook' || this.contactId === 'tool_answerbook');
+    // 答案之书用本地随机答案，不需要 aiPrompt
+    if (!isBook && (!this.aiPrompt || this.isAILoading)) {
+      return;
+    }
+    if (isBook && this.isAILoading) {
       return;
     }
 
@@ -161,7 +166,6 @@ struct ChatPage {
       let localUid = ToolKits.getLocalUserUid() || 'me';
       let msgProvider = IMClientManager.getInstance().getMessageProvider();
       let isTarot = (this.contactId === 'ai_tarot');
-      let isBook = (this.contactId === 'ai_answerbook' || this.contactId === 'tool_answerbook');
 
       // 1. 添加用户消息到全局消息缓存
       let userMsg = new Message(localUid, '我', Date.now(), userMessage, MsgType.TYPE_TEXT);
