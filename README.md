@@ -4,6 +4,12 @@
 
 ---
 
+## 📹 演示视频
+
+> 百度网盘：[点击下载](https://pan.baidu.com/s/1znSd-du7APZPitNTJ3ctKw)  提取码：`q5m4`
+
+---
+
 ## 一、项目概述
 
 HarmonyChat 是一个鸿蒙 NEXT 上的**AI 智能社交聊天应用**。在原始 IM 聊天基础上，集成了 DeepSeek 大模型，实现了 AI 角色对话、工具箱、社区互动、小游戏等功能。支持手机/平板/2in1 多设备响应式布局和二次流转。
