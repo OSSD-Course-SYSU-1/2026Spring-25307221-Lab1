@@ -125,31 +125,26 @@ struct MainPage {
           // ==================== Tab 3: 工具箱 ====================
           TabContent() {
             Column() {
-              Column() {
-                Text('工具箱')
-                  .fontSize(22)
-                  .fontWeight(FontWeight.Bold)
-                Text('AI实用工具，一键直达')
-                  .fontSize(12)
-                  .fontColor('#999999')
-                  .margin({ top: 4 })
-              }
-              .width('100%')
-              .alignItems(HorizontalAlign.Start)
-              .padding({ left: 16, right: 16, top: 12, bottom: 8 })
+              Text('工具箱')
+                .fontSize(22)
+                .fontWeight(FontWeight.Bold)
+                .width('100%')
+                .padding({ left: 16, right: 16, top: 12, bottom: 4 })
 
+              // 2列图标网格
               Grid() {
                 ForEach(aiTools, (tool: AITool) => {
                   GridItem() {
-                    this.toolItem(tool)
+                    this.toolIcon(tool)
                   }
                 }, (tool: AITool) => tool.id)
               }
-              .columnsTemplate('1fr')
-              .rowsGap(12)
+              .columnsTemplate('1fr 1fr')
+              .columnsGap(10)
+              .rowsGap(10)
               .width('100%')
               .layoutWeight(1)
-              .padding({ left: 14, right: 14, top: 8 })
+              .padding({ left: 14, right: 14, top: 8, bottom: 8 })
             }
             .width('100%')
             .height('100%')
@@ -614,40 +609,37 @@ struct MainPage {
     })
   }
 
-  // 工具卡片
-  @Builder toolItem(tool: AITool) {
-    Row() {
+  // 工具图标卡片（2列网格，紧凑布局）
+  @Builder toolIcon(tool: AITool) {
+    Column() {
       Column() {
-        Text(tool.emoji).fontSize(28)
+        Text(tool.emoji).fontSize(32)
       }
-      .width(52).height(52)
-      .borderRadius(14)
+      .width(56).height(56)
+      .borderRadius(16)
       .backgroundColor(tool.bgColor)
       .justifyContent(FlexAlign.Center)
       .alignItems(HorizontalAlign.Center)
 
-      Column() {
-        Text(tool.name)
-          .fontSize(16)
-          .fontWeight(FontWeight.Bold)
-          .fontColor('#1a1a1a')
-        Text(tool.description)
-          .fontSize(12)
-          .fontColor('#888888')
-          .margin({ top: 4 })
-          .maxLines(1)
-          .textOverflow({ overflow: TextOverflow.Ellipsis })
-      }
-      .alignItems(HorizontalAlign.Start)
-      .layoutWeight(1)
-      .margin({ left: 14 })
+      Text(tool.name)
+        .fontSize(14)
+        .fontWeight(FontWeight.Medium)
+        .fontColor('#1a1a1a')
+        .margin({ top: 8 })
+        .maxLines(1)
+
+      Text(tool.description)
+        .fontSize(11)
+        .fontColor('#aaa')
+        .margin({ top: 2 })
+        .maxLines(1)
+        .textOverflow({ overflow: TextOverflow.Ellipsis })
     }
     .width('100%')
-    .padding({ top: 14, bottom: 14, left: 14, right: 16 })
+    .padding({ top: 14, bottom: 14, left: 6, right: 6 })
     .backgroundColor(Color.White)
     .borderRadius(14)
-    .border({ width: 1, color: '#F0F0F0' })
-    .shadow({ radius: 6, color: '#0000000a', offsetX: 0, offsetY: 2 })
+    .alignItems(HorizontalAlign.Center)
     .onClick(() => {
       this.onToolClick(tool);
     })
