@@ -110,12 +110,25 @@ export struct ChatInputView {
         .fontSize(13)
         .layoutWeight(1)
         .borderRadius(8)
-        .margin({ left: 10, right: 10 })
+        .margin({ left: 10, right: 6 })
         .padding({ left: 10, right: 10 })
         .placeholderFont({ size: 14 })
         .placeholderColor('#a1a7af')
 
-      Button("提交", { type: ButtonType.Normal, stateEffect: true })
+      // 语音按钮
+      Button({ type: ButtonType.Circle }) {
+        Text('🎤').fontSize(18)
+      }
+      .width(34).height(34)
+      .backgroundColor('#f0f0f0')
+      .margin({ right: 6 })
+      .onClick(() => {
+        // TODO: 接入 @kit.CoreSpeechKit 语音识别
+        // 当前提示用户语音功能入口
+        AlertDialog.show({ message: '语音功能开发中\n请先使用文字输入' });
+      })
+
+      Button("发送", { type: ButtonType.Normal, stateEffect: true })
         .width(44)
         .height(34)
         .borderRadius(8)

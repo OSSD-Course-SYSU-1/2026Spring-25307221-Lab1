@@ -89,32 +89,51 @@ struct MainPage {
           .tabBar(this.TabBuilder('AI广场', 0, '🤖'))
           .align(Alignment.Top)
 
-          // ==================== Tab 3: 工具箱 ====================
+          // ==================== Tab 1: 工具箱 ====================
           TabContent() {
-            Column() {
-              Text('工具箱')
-                .fontSize(22)
-                .fontWeight(FontWeight.Bold)
-                .width('100%')
-                .padding({ left: 16, right: 16, top: 12, bottom: 4 })
+            Scroll() {
+              Column() {
+                Text('工具箱')
+                  .fontSize(22)
+                  .fontWeight(FontWeight.Bold)
+                  .width('100%')
+                  .padding({ left: 16, right: 16, top: 12, bottom: 4 })
 
-              // 2列图标网格
-              Grid() {
-                ForEach(aiTools, (tool: AITool) => {
-                  GridItem() {
-                    this.toolIcon(tool)
-                  }
-                }, (tool: AITool) => tool.id)
+                // 学习工作
+                Text('📚 学习工作')
+                  .fontSize(14)
+                  .fontWeight(FontWeight.Bold)
+                  .fontColor('#555')
+                  .width('100%')
+                  .padding({ left: 16, right: 16, top: 8, bottom: 4 })
+
+                Grid() {
+                  ForEach(aiTools.filter((t: AITool) => t.category === '学习工作'), (tool: AITool) => {
+                    GridItem() { this.toolIcon(tool) }
+                  }, (tool: AITool) => tool.id)
+                }
+                .columnsTemplate('1fr 1fr').columnsGap(10).rowsGap(10)
+                .width('100%').padding({ left: 14, right: 14, bottom: 12 })
+
+                // 趣味生活
+                Text('🎯 趣味生活')
+                  .fontSize(14)
+                  .fontWeight(FontWeight.Bold)
+                  .fontColor('#555')
+                  .width('100%')
+                  .padding({ left: 16, right: 16, top: 4, bottom: 4 })
+
+                Grid() {
+                  ForEach(aiTools.filter((t: AITool) => t.category === '趣味生活'), (tool: AITool) => {
+                    GridItem() { this.toolIcon(tool) }
+                  }, (tool: AITool) => tool.id)
+                }
+                .columnsTemplate('1fr 1fr').columnsGap(10).rowsGap(10)
+                .width('100%').padding({ left: 14, right: 14, bottom: 16 })
               }
-              .columnsTemplate('1fr 1fr')
-              .columnsGap(10)
-              .rowsGap(10)
               .width('100%')
-              .layoutWeight(1)
-              .padding({ left: 14, right: 14, top: 8, bottom: 8 })
             }
-            .width('100%')
-            .height('100%')
+            .width('100%').height('100%')
           }
           .tabBar(this.TabBuilder('工具箱', 1, '🧰'))
           .align(Alignment.Top)
