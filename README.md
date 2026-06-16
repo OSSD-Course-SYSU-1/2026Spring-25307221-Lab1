@@ -1,100 +1,194 @@
-<div align="center">
-    <a href="http://www.52im.net/thread-52-1-1.html">
-    <img src="entry/src/main/resources/base/media/ic_splash_graybg2.png" width="150" alt="harmonychat logo">
-    </a>
+# HarmonyChat — 基于HarmonyOS NEXT的AI社交聊天应用
 
-  [![star](https://gitcode.com/hellojackjiang2011/harmonychat/star/badge.svg)](https://gitcode.com/hellojackjiang2011/harmonychat)
-  [![Gitee star](https://gitee.com/jackjiang/harmonychat/badge/star.svg?theme=white)](https://gitee.com/jackjiang/harmonychat)
-  [![GitHub stars](https://img.shields.io/github/stars/JackJiang2011/harmonychat.svg?style=social&label=Stars)](https://github.com/JackJiang2011/harmonychat)
- [![License](https://img.shields.io/badge/license-Apache2.0-00c800)](https://gitee.com/JackJiang2011/MobileIMSDK/blob/master/LICENSE)
+> 开发者：Sherry | 基于 MobileIMSDK + DeepSeek 大模型
 
-<img src="https://trendshift.io/api/badge/repositories/2" alt="MobileIMSDK | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/>
+---
 
-:heart: <b>最新动态：</b>基于MobileIMSDK的鸿蒙Next端IM产品[RainbowTalk](http://www.52im.net/thread-4822-1-1.html)已发布。:heart:
+## 一、项目概述
 
-</div>
+HarmonyChat 是一个鸿蒙 NEXT 上的**AI 智能社交聊天应用**。在原始 IM 聊天基础上，集成了 DeepSeek 大模型，实现了 AI 角色对话、工具箱、社区互动、小游戏等功能。支持手机/平板/2in1 多设备响应式布局和二次流转。
 
-# 一、HarmonyChat是什么？
+---
 
-HarmonyChat是 **一个简洁的鸿蒙NEXT上的基于WebSocket协议的聊天客户端** ，它基于[MobileIMSDK](https://gitee.com/jackjiang/MobileIMSDK)（![star](https://gitcode.com/hellojackjiang2011/MobileIMSDK/star/badge.svg)
-![Gitee star](https://gitee.com/jackjiang/MobileIMSDK/badge/star.svg?theme=white)
-![GitHub stars](https://img.shields.io/github/stars/JackJiang2011/MobileIMSDK.svg?style=social&label=Stars)）通信库， **有完善的网络通信通力、简洁的聊天界面UI、合理的代码拆分和逻辑实现，非常适合学习研究或直接用于简单的鸿蒙NEXT单页聊天项目中** 。
+## 二、整体架构（5个Tab）
 
-HarmonyChat引用了[MobileIMSDK](https://gitee.com/jackjiang/MobileIMSDK)开源即时通讯框架的鸿蒙NEXT端Demo代码，并参考了鸿蒙NEXT端IM产品[RainbowTalk](http://www.52im.net/thread-4824-1-1.html)的部分框架性代码，希望能带给你帮助。
+| Tab | 功能 | 说明 |
+|-----|------|------|
+| 🤖 **AI广场** | AI角色对话 | 8个AI角色：学习导师、编程助手、面试官、心理咨询师、塔罗师、穿搭师、游戏教练、AI Idol |
+| 🧰 **工具箱** | 实用AI工具 | 10个工具，分学习工作和趣味生活两大类 |
+| 🌐 **社区** | AI朋友圈 | 打卡、心情日记、树洞匿名分享、AI朋友动态流 |
+| 🎮 **游戏** | 休闲小游戏 | 6款小游戏：猜数字、贪吃蛇、老虎机、反应测试、乒乓球、俄罗斯方块 |
+| 👤 **我的** | 个人中心 | 修改昵称 |
 
-![输入图片说明](screenshots/all_futures.jpg)
+---
 
-# 二、为什么有HarmonyChat？
+## 三、AI广场 — 8个AI角色
 
-我本身是[MobileIMSDK](https://gitee.com/jackjiang/MobileIMSDK)开源框架的作者，正好近期趁着开发MobileIMSDK的鸿蒙NEXT端演示界面的机会，把相关的UI代码整理出来，希望在当前鸿蒙有质量的资料比较少的情况下，能带给需要的人一点启发或帮助。
+每个 AI 角色都有独立的系统提示词和人设，通过 DeepSeek API 进行深度对话：
 
-你如果在HarmonyChat中看到有关MobileIMSDK的资料和字眼也不要奇怪，因为本工程中的代码、资料、想法，都是从[MobileIMSDK的鸿蒙NEXT端工程](https://gitee.com/jackjiang/MobileIMSDK/tree/master/demo_src/WebSocket)中整理和抽取出来的，目的是方便需要的人从单独的UI界面和功能来学习和使用。
+| 角色 | Emoji | 功能 |
+|------|-------|------|
+| 学习导师 | 🎓 | 知识总结、复习规划、考试出题 |
+| 编程助手 | 💻 | 代码调试、算法讲解、技术问答 |
+| 面试官 | 💼 | 模拟面试、技术提问、行为面试 |
+| 心理咨询师 | 💜 | 情绪疏导、压力管理、自我探索 |
+| 塔罗师 | 🔮 | 78张真牌随机抽牌+互动翻牌+AI深度解读 |
+| 穿搭师 | 👗 | 穿搭建议、风格诊断、场合搭配 |
+| 游戏教练 | 🎮 | 王者荣耀/无畏契约/和平精英攻略 |
+| AI Idol | ⭐ | 模拟偶像语气聊天、分享最新动态 |
 
-# 三、谁需要HarmonyChat？
+**技术实现**：
+- 基于 [DeepSeek API](https://api.deepseek.com) 的 Chat Completions
+- 多轮对话上下文（最近20条消息）
+- 塔罗师：用户可交互选牌（12张暗牌，点击翻3张）
+- AI Idol：模拟明星第一人称语气
 
-目前高质量的鸿蒙NEXT端IM聊天方面的开源代码还非常少（几乎找不到有价值的开源分享），所以我希望能把自已编写的相关代码抽取出来供需要的人借鉴和使用，共同进步。
+---
 
-<b>HarmonyChat特别适合以下开发者学习、研究或直接使用</b>：
+## 四、工具箱 — 10个AI工具
 
-1. :triangular_flag_on_post: 想学习使用ArkTS和ArkUI开发聊天界面的；
-2. :triangular_flag_on_post: 想学习如果在鸿蒙NEXT中对接网络通信代码的；
-3. :triangular_flag_on_post: 想学习IM聊天程序如何在鸿蒙NEXT中实现UI和网络数据的逻辑分离的；
-4. :triangular_flag_on_post: 想得到可以直接使用的单页聊天界面的；
-5. :triangular_flag_on_post: 想要开发IM聊天应用，但需要一个脚手架作为起点的。
+### 📚 学习工作（6个）
 
-# 四、实现了哪些特性？
+| 工具 | 功能 | 交互方式 |
+|------|------|----------|
+| 📄 **文档总结** | 提炼PDF/Word/PPT要点 | 分屏：上输入原文，下显示结果 |
+| 📝 **AI出题** | 输入知识点，自动生成练习题 | 聊天式 |
+| 📊 **PPT辅助** | 输入主题，生成大纲和讲稿思路 | 分屏 |
+| 🌐 **实时翻译** | 自动识别语言并翻译 | 分屏 |
+| 📋 **简历优化** | 分析简历，给出修改建议 | 聊天式 |
+| 🎯 **面试模拟** | 模拟真实面试，追问+评分 | 聊天式 |
 
-1. :triangular_flag_on_post: 实现了一个UI简洁、代码清晰、逻辑分层合理的聊天界面（可以直接复制到一些单页聊天产中品用，比如客服聊天）；
-2. :triangular_flag_on_post: 消息的送达状态在UI界面上会自动更新显示（包括发送中、已送达、送达失败）；
-3. :triangular_flag_on_post: 网络连接状态的UI显示（含心跳呼吸灯效果）；
-4. :triangular_flag_on_post: 实现了真正的网络通信和聊天（包括完整的多端互踢、网络心跳、掉线重连、消息重传、消息应答、消息去重等），这是基于MobileIMSDK通信库实现的；
-5. :triangular_flag_on_post: 实现了隐私提醒、闪屏、登录界面的判断和跳转逻辑（可以直接复制这几个界面到你的产品中去用用）
-6. :triangular_flag_on_post: 鸿蒙NEXT的List列表在LazyForEach带来的性能优化情况下的动态UI刷新；
-7. :triangular_flag_on_post: 利用DataSource和一个全局消息缓存管理机制实现网络数据与UI的解偶（<b>这是IM消息和UI解偶的关键</b>）；
-8. :triangular_flag_on_post: 实现了跟微信基本一致的消息时间计算和显示逻辑（人性化时间、超过2分钟才显示时间）；
-9. :triangular_flag_on_post: 合理的拆分了不同消息类型组件式扩展的实现逻辑，方便扩展更多消息类型的UI显示；
-10. :triangular_flag_on_post: 解决了消息文本超长导致Row()组件被挤出屏幕可视区显示的问题（这可能是鸿蒙的bug）；
-11. :triangular_flag_on_post: 一些鸿蒙NEXT简单动画的应用；
-12. :triangular_flag_on_post: 适配全面屏；
-13. :triangular_flag_on_post: 详细的代码注释，便于学习研究。
+### 🎯 趣味生活（4个）
 
-# 五、源码的开源仓库地址
+| 工具 | 功能 | 交互方式 |
+|------|------|----------|
+| 📖 **答案之书** | 心中默问，翻书动画揭示答案 | 翻书弹窗+本地随机 |
+| 🌟 **运势测试** | 今日运势、星座解读 | 聊天式 |
+| 🃏 **塔罗牌** | 78张真牌互动选3张 | 卡牌选择界面 |
+| ☯️ **周易算卦** | 小事问卦（不涉命运） | 聊天式 |
 
- **HarmonyChat源码仓库：**
+**技术实现**：
+- 答案之书：30条答案池本地真随机，翻书动画（14次快速翻页+减速）
+- 塔罗牌：Fisher-Yates洗牌算法，从78张（22大阿尔卡纳+56小阿尔卡纳）中抽12张供用户选
+- 翻译/PPT：上下分屏布局，上输入原文，下显示AI结果
 
-* 1）Gitee码云：[https://gitee.com/jackjiang/harmonychat](https://gitee.com/jackjiang/harmonychat) （速度快，首选 :point_left:）
-* 2）Gitcode：[https://gitcode.com/hellojackjiang2011/harmonychat](https://gitcode.com/hellojackjiang2011/harmonychat)
-* 3）Github：[https://github.com/JackJiang2011/harmonychat](https://github.com/JackJiang2011/harmonychat) 
+---
 
- **开源MobileIMSDK的源码仓库：**
+## 五、社区 — AI朋友圈
 
-* 1）Gitee码云：[https://gitee.com/jackjiang/MobileIMSDK](https://gitee.com/jackjiang/MobileIMSDK) ![Gitee star](https://gitee.com/jackjiang/MobileIMSDK/badge/star.svg?theme=white) 🔥
-* 2）Gitcode：[https://gitcode.com/hellojackjiang2011/MobileIMSDK](https://gitcode.com/hellojackjiang2011/MobileIMSDK) ![star](https://gitcode.com/hellojackjiang2011/MobileIMSDK/star/badge.svg) 🔥
-* 3）Github：[https://github.com/JackJiang2011/MobileIMSDK](https://github.com/JackJiang2011/MobileIMSDK)) ![GitHub stars](https://img.shields.io/github/stars/JackJiang2011/MobileIMSDK.svg?style=social&label=Stars) 🔥
+### 功能模块
 
-# 六、实际运行截图
+| 功能 | 说明 |
+|------|------|
+| 🔥 **每日打卡** | 每天限打一次，连续天数统计 |
+| 📔 **心情日记** | 8种emoji心情选择，可同天多次修改 |
+| 🌳 **树洞** | 匿名发表心事，AI朋友自然回应 |
+| 🔄 **动态刷新** | 每次进入社区随机生成新一批动态 |
+| ❤️ **点赞评论** | 用户可点赞、emoji快捷回复（👍❤️💪✨） |
 
-#### 1）Demo 的登陆界面运行截图（点击可看大图 ▼）：
-![输入图片说明](screenshots/run1.png)
+### AI朋友体系（12位）
 
-#### 2）Demo 的主界面运行截图（点击可看大图 ▼）：
-![输入图片说明](screenshots/run2.png)
+| AI朋友 | 身份 |
+|--------|------|
+| 代码诗人 🧑‍💻 | 技术宅 |
+| 考研上岸中 📚 | 勤奋考研党 |
+| 穿搭小能手 👗 | 时尚达人 |
+| 咖啡与书 ☕ | 文艺青年 |
+| 健身狂魔 💪 | 自律健身爱好者 |
+| 小太阳 🌻 | 乐观开朗 |
+| 深夜画师 🎨 | 感性细腻 |
+| 产品经理日记 📋 | 职场新人 |
+| 峡谷李白 ⚔️ | 王者荣耀高手 |
+| 和平精英大神 🎯 | 吃鸡战术大师 |
+| 瓦洛兰特特工 🔫 | 无畏契约战术分析师 |
+| 娱乐前线 📺 | 娱乐圈资讯达人 |
 
-#### 3）Demo 运行的同时，可以查看详细的 log 输出（方便调试）：
-![输入图片说明](screenshots/run3.png)
+**技术实现**：
+- AI动态根据用户心情和树洞内容智能生成
+- 心情低落时自然出现温暖鼓励内容（不刻意）
+- AI朋友之间互相评论（1-3条随机）
+- Fisher-Yates随机打乱帖子顺序和评论
 
-# 七、更多详细的技术要点
+---
 
-更详细的技术要点说明请参见我的博文《[开源IM聊天程序HarmonyChat：基于鸿蒙NEXT的WebSocket协议](http://www.52im.net/thread-4770-1-1.html)》，涉及了服务端的部署和运行、消息文本超长导致Row()组件被挤出屏幕可视区的问题、仿微信消息时间显示的代码实现、网络数据与UI界面解偶的实现、网络通信等。
+## 六、游戏 — 6款休闲小游戏
 
-# 八、相关资料
+| 游戏 | 玩法 | 操作 |
+|------|------|------|
+| 🎯 猜数字 | 1-100之间猜数字 | 输入数字点击猜 |
+| 🐍 贪吃蛇 | 经典贪吃蛇 | 方向键 ⬆⬇⬅➡ |
+| 🎰 老虎机 | 三列相同中奖 | 点击旋转 |
+| ⚡ 反应测试 | 测反应速度（毫秒） | 点击屏幕 |
+| 🏓 乒乓球 | 对战胜AI | 手指滑动挡板 |
+| 🧱 俄罗斯方块 | 消除满行得分 | ⬅➡移动 🔄旋转 ⏬速降 |
 
-* ① [鸿蒙Next官方开发资料](https://developer.huawei.com/consumer/cn/doc/harmonyos-references-V5/js-apis-websocket-V5)
-* ② [MobileIMSDK-鸿蒙Next端开发手册](http://www.52im.net/thread-4767-1-1.html)（* 推荐）
-* ③ [MobileIMSDK-服务端部署手册](http://www.52im.net/thread-1272-1-1.html)
+技术实现：全部基于 ArkUI 原生组件（Grid、Stack、Text 等），无第三方游戏引擎。
 
-# 九、Bug上报和技术讨论
+---
 
-* 讨论学习和资料查阅：[点此进入](http://www.52im.net/)；
-* bug和建议请发送至：`jb2011@163.com`，或者在本工程中开Issue也行；
-* 作者博客：[关于作者](http://www.52im.net/thread-2792-1-1.html)）。
+## 七、多端适配
+
+### 一次开发，多端部署
+- `module.json5` 声明 `deviceTypes: ["phone", "tablet", "2in1"]`
+- 断点系统（SM < 600vp < MD < 840vp < LG）
+- AI广场：手机单列，平板双列网格
+- 聊天气泡：手机320vp，平板480vp自适应
+- 平板专属资源文件 `resources/tablet/`
+
+### 二次流转（跨设备迁移）
+- `EntryAbility.onContinue()` 保存当前页面状态
+- `continuable: true` 配置
+- 设备A → 设备B 无缝切换
+
+---
+
+## 八、技术栈
+
+| 层级 | 技术 |
+|------|------|
+| 前端框架 | ArkTS + ArkUI（HarmonyOS NEXT API 13） |
+| IM通信 | MobileIMSDK（WebSocket协议） |
+| AI大模型 | DeepSeek Chat API |
+| 数据持久化 | Preferences（本地KV存储） |
+| 响应式 | 自定义BreakpointSystem + AppStorage |
+
+---
+
+## 九、如何运行
+
+1. 用 DevEco Studio 打开项目
+2. 在 `ApiConfig.ts` 中配置 DeepSeek API Key
+3. 编译运行到模拟器或真机
+4. 可跳过登录直接体验 AI 功能
+
+---
+
+## 十、项目结构
+
+```
+entry/src/main/ets/
+├── entryability/EntryAbility.ets    # 入口+二次流转
+├── model/
+│   ├── AICharacterData.ets          # 8个AI角色定义
+│   ├── ToolData.ets                 # 10个工具定义
+│   ├── CommunityData.ets            # 社区数据+AI朋友
+│   └── ContactModel.ets             # 联系人模型
+├── service/
+│   ├── DeepSeekService.ets          # DeepSeek API封装
+│   └── TarotService.ets             # 78张塔罗牌+洗牌
+├── pages/
+│   ├── MainPage.ets                 # 主界面5Tab
+│   ├── ChatPage.ets                 # 聊天页（支持AI/IM/分屏）
+│   ├── LoginPage.ets                # 登录（含跳过登录）
+│   ├── SplashPage.ets               # 闪屏
+│   └── components/
+│       ├── ChatInputView.ets        # 输入框（含语音按钮）
+│       ├── TarotDrawView.ets        # 塔罗选牌界面
+│       ├── AnswerBookView.ets       # 答案之书翻书动画
+│       ├── MiniGameView.ets         # 6款小游戏
+│       └── ChatTitleBar.ets         # 聊天标题栏
+└── resources/
+    ├── base/                        # 基础资源
+    ├── tablet/                      # 平板适配资源
+    └── rawfile/tarot/               # 78张塔罗牌卡图
+```
