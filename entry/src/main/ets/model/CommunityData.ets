@@ -97,7 +97,16 @@ export const aiFriends: AIFriend[] = [
     chatGreeting: '晚上好 🎨 我刚画完今天的小稿。画画的时候觉得整个世界都安静下来了。你最近有没有什么想记录下来的瞬间？' },
   { name: '产品经理日记', emoji: '📋', personality: '职场新人，分享求职和成长心得',
     chatPrompt: '你是「产品经理日记」，一个刚入行的产品实习生。你正在适应职场，记录成长点滴。说话风格：务实、爱分享经验、偶尔吐槽甲方。你擅长给求职建议、分享面试经验、讨论职业规划。',
-    chatGreeting: '周一了！📋 刚开完站会，需求又改了哈哈哈。你也在找工作或者刚入职吗？一起交流经验呀～' }
+    chatGreeting: '周一了！📋 刚开完站会，需求又改了哈哈哈。你也在找工作或者刚入职吗？一起交流经验呀～' },
+  { name: '峡谷李白', emoji: '⚔️', personality: '王者荣耀高手，刺客专精',
+    chatPrompt: '你是「峡谷李白」，王者荣耀国服李白玩家。你以游戏角色李白的口吻说话，带点侠客风。偶尔讨论游戏攻略、英雄技巧、新皮肤评价。',
+    chatGreeting: '⚔️ 大河之剑天上来！我是峡谷李白，聊聊王者？' },
+  { name: '和平精英大神', emoji: '🎯', personality: '吃鸡高手，战术大师',
+    chatPrompt: '你是「和平精英大神」，KD 5.0的王牌战士。说话风格：硬核、直接、爱分享战术。对枪械和地图了如指掌。',
+    chatGreeting: '🎯 P城见？大吉大利，今晚吃鸡！' },
+  { name: '瓦洛兰特特工', emoji: '🔫', personality: '无畏契约战术分析师',
+    chatPrompt: '你是「瓦洛兰特特工」，无畏契约战术专家。说话风格：冷静、分析型、像在做战报。精通特工技能和地图细节。',
+    chatGreeting: '🔫 特工已就位。聊聊今天的对局？' }
 ];
 
 // 心情相关的帖子模板（根据用户心情选择）
@@ -136,6 +145,20 @@ function getMoodPosts(userMood: string): MoodPostEntry[] {
   let p8: MoodPostEntry = { friend: aiFriends[7], content: '发现一个提高效率的方法：番茄工作法 + 手机放另一个房间 = 生产力翻倍。今天一口气搞完3个任务，爽！' };
   posts.push(p7);
   posts.push(p8);
+
+  // 游戏角色偶尔冒泡
+  if (Math.random() > 0.4) {
+    let gp: MoodPostEntry = { friend: aiFriends[8], content: '⚔️ 今天排位十连胜，李白打野还是强啊！分享一套出装：追击刀锋+抵抗之靴+暗影战斧+宗师之力+破军+名刀，后期一刀一个脆皮。' };
+    posts.push(gp);
+  }
+  if (Math.random() > 0.5) {
+    let gp2: MoodPostEntry = { friend: aiFriends[9], content: '🎯 P城刚枪三连鸡！今天手感爆炸，M416压枪稳如老狗。兄弟们记住：落地先找枪，别贪物资！' };
+    posts.push(gp2);
+  }
+  if (Math.random() > 0.6) {
+    let gp3: MoodPostEntry = { friend: aiFriends[10], content: '🔫 新版本捷风削弱了但依然能玩。分享一个B点进攻烟位：从市场封CT烟，雷兹丢雷清死角，一波进。队友配合好基本无解。' };
+    posts.push(gp3);
+  }
 
   return posts;
 }
