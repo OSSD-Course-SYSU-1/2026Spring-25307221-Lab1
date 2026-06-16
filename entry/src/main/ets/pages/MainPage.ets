@@ -2,6 +2,7 @@ import { allContacts, recentContacts, Contact } from '../model/ContactModel';
 import router from '@ohos.router';
 import { aiCharacters, AICharacter } from '../model/AICharacterData'
 import { aiTools, AITool } from '../model/ToolData'
+import { communityPosts, CommunityPost, topics, checkInRanking } from '../model/CommunityData'
 import { BreakpointType, getBreakpoint } from './common/BreakpointSystem';
 import { window } from '@kit.ArkUI';
 
@@ -12,6 +13,11 @@ struct MainPage {
   @State isMenuVisible: boolean = false;
   @State currentBreakpoint: BreakpointType = BreakpointType.SM;
   private windowWidth: number = 360;
+  // 社区状态
+  @State communitySelectedTopic: string = '全部';
+  @State showCheckInToast: boolean = false;
+  private userStreak: number = 31;  // 用户连续打卡天数
+  @State posts: CommunityPost[] = communityPosts;
 
   aboutToAppear() {
     let windowClass = window.getLastWindow(getContext(this));
@@ -142,36 +148,108 @@ struct MainPage {
           // ==================== Tab 4: 社区 ====================
           TabContent() {
             Column() {
+              // 标题栏
               Row() {
                 Text('社区')
                   .fontSize(20)
                   .fontWeight(FontWeight.Bold)
+                  .layoutWeight(1)
+                Text('📝')
+                  .fontSize(20)
+                  .onClick(() => {
+                    AlertDialog.show({ message: '发布功能即将上线！' });
+                  })
               }
               .width('100%')
-              .height(56)
+              .height(48)
               .padding({ left: 16, right: 16 })
-              .justifyContent(FlexAlign.Start)
-              .alignItems(VerticalAlign.Center)
 
-              Column() {
-                Text('🌐')
-                  .fontSize(48)
-                  .margin({ bottom: 12 })
-                Text('AI社区即将上线')
-                  .fontSize(16)
-                  .fontWeight(FontWeight.Medium)
-                  .margin({ bottom: 8 })
-                Text('AI朋友圈 · 学习打卡 · 排行榜')
+              // 打卡卡片
+              Row() {
+                Column() {
+                  Text('🔥')
+                    .fontSize(22)
+                  Text('已坚持')
+                    .fontSize(11)
+                    .fontColor('#999')
+                }
+                .margin({ right: 12 })
+
+                Text(this.userStreak.toString())
+                  .fontSize(32)
+                  .fontWeight(FontWeight.Bold)
+                  .fontColor('#E67E22')
+                  .margin({ right: 6 })
+
+                Text('天')
+                  .fontSize(14)
+                  .fontColor('#666')
+                  .margin({ top: 12 })
+
+                Blank()
+
+                Button('今日打卡')
                   .fontSize(13)
-                  .fontColor('#999999')
+                  .fontColor(Color.White)
+                  .backgroundColor('#E67E22')
+                  .borderRadius(18)
+                  .height(34)
+                  .padding({ left: 16, right: 16 })
+                  .onClick(() => {
+                    this.userStreak++;
+                    AlertDialog.show({ message: '✅ 打卡成功！已坚持 ' + this.userStreak.toString() + ' 天' });
+                  })
+              }
+              .width('90%')
+              .padding({ top: 14, bottom: 14, left: 18, right: 18 })
+              .backgroundColor(Color.White)
+              .borderRadius(14)
+              .shadow({ radius: 4, color: '#00000008', offsetX: 0, offsetY: 1 })
+              .margin({ bottom: 10 })
+
+              // 话题标签栏
+              Row() {
+                Scroll() {
+                  Row() {
+                    ForEach(topics, (t: import('../model/CommunityData').Topic) => {
+                      Text(t.name)
+                        .fontSize(12)
+                        .fontColor(this.communitySelectedTopic === t.name ? Color.White : t.color)
+                        .backgroundColor(this.communitySelectedTopic === t.name ? t.color : '#F0F0F0')
+                        .borderRadius(14)
+                        .padding({ left: 14, right: 14, top: 6, bottom: 6 })
+                        .margin({ right: 8 })
+                        .onClick(() => {
+                          this.communitySelectedTopic = t.name;
+                          if (t.name === '全部') {
+                            this.posts = communityPosts;
+                          } else {
+                            this.posts = communityPosts.filter(p => p.topic === t.name);
+                          }
+                        })
+                    })
+                  }
+                }
+                .scrollable(ScrollDirection.Horizontal)
+                .scrollBar(BarState.Off)
+              }
+              .width('100%')
+              .padding({ left: 14, right: 14, top: 6, bottom: 10 })
+
+              // 动态列表
+              List({ space: 10 }) {
+                ForEach(this.posts, (post: CommunityPost) => {
+                  ListItem() {
+                    this.postCard(post)
+                  }
+                }, (post: CommunityPost) => post.id)
               }
               .width('100%')
               .layoutWeight(1)
-              .justifyContent(FlexAlign.Center)
             }
             .width('100%')
             .height('100%')
-            .backgroundColor('#F5F5F5')
+            .backgroundColor('#F0F0F0')
           }
           .tabBar(this.TabBuilder('社区', 3, '🌐'))
           .align(Alignment.Top)
@@ -443,6 +521,90 @@ struct MainPage {
     .onClick(() => {
       this.onToolClick(tool);
     })
+  }
+
+  // 社区帖子卡片
+  @Builder postCard(post: CommunityPost) {
+    Column() {
+      // 用户信息行
+      Row() {
+        Text(post.userAvatar)
+          .fontSize(32)
+        Column() {
+          Text(post.userName)
+            .fontSize(14)
+            .fontWeight(FontWeight.Bold)
+          Text(post.timeAgo)
+            .fontSize(11)
+            .fontColor('#999')
+        }
+        .margin({ left: 10 })
+        .alignItems(HorizontalAlign.Start)
+
+        Blank()
+
+        // 话题标签
+        Text(post.topic)
+          .fontSize(10)
+          .fontColor(post.topicColor)
+          .padding({ left: 8, right: 8, top: 3, bottom: 3 })
+          .backgroundColor(post.topicColor + '18')
+          .borderRadius(8)
+      }
+      .width('100%')
+
+      // 帖子内容
+      Text(post.content)
+        .fontSize(14)
+        .fontColor('#333')
+        .lineHeight(20)
+        .margin({ top: 10, bottom: 12 })
+        .maxLines(5)
+        .textOverflow({ overflow: TextOverflow.Ellipsis })
+
+      // 底部互动行
+      Row() {
+        Row() {
+          Text(post.isLiked ? '❤️' : '🤍')
+            .fontSize(14)
+          Text(post.likeCount.toString())
+            .fontSize(12)
+            .fontColor('#999')
+            .margin({ left: 4 })
+        }
+        .onClick(() => {
+          post.isLiked = !post.isLiked;
+          if (post.isLiked) {
+            post.likeCount++;
+          } else {
+            post.likeCount--;
+          }
+        })
+
+        Row() {
+          Text('💬')
+            .fontSize(14)
+          Text(post.commentCount.toString())
+            .fontSize(12)
+            .fontColor('#999')
+            .margin({ left: 4 })
+        }
+        .margin({ left: 24 })
+        .onClick(() => {
+          AlertDialog.show({ message: '评论功能即将上线！' });
+        })
+
+        Blank()
+
+        Text('分享')
+          .fontSize(11)
+          .fontColor('#999')
+      }
+    }
+    .width('100%')
+    .padding({ top: 14, bottom: 14, left: 14, right: 14 })
+    .backgroundColor(Color.White)
+    .borderRadius(12)
   }
 
   // 工具点击处理
