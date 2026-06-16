@@ -118,7 +118,7 @@ struct MainPage {
                     GridItem() { this.toolIcon(tool) }
                   }, (tool: AITool) => tool.id)
                 }
-                .columnsTemplate('1fr 1fr').columnsGap(10).rowsGap(10)
+                .columnsTemplate('1fr').rowsGap(8)
                 .width('100%').padding({ left: 14, right: 14, bottom: 12 })
 
                 // 趣味生活
@@ -669,18 +669,32 @@ struct MainPage {
     })
   }
 
-  // 工具图标卡片（紧凑布局）
+  // 工具卡片
   @Builder toolIcon(tool: AITool) {
-    Column() {
-      Text(tool.emoji).fontSize(28)
-      Text(tool.name).fontSize(12).fontWeight(FontWeight.Medium).fontColor('#1a1a1a').margin({ top: 4 })
+    Row() {
+      Column() {
+        Text(tool.emoji).fontSize(30)
+      }
+      .width(48).height(48)
+      .borderRadius(14)
+      .backgroundColor(tool.bgColor)
+      .justifyContent(FlexAlign.Center)
+      .alignItems(HorizontalAlign.Center)
+
+      Column() {
+        Text(tool.name)
+          .fontSize(14).fontWeight(FontWeight.Bold).fontColor('#1a1a1a')
+        Text(tool.description)
+          .fontSize(11).fontColor('#999').margin({ top: 2 })
+          .maxLines(1).textOverflow({ overflow: TextOverflow.Ellipsis })
+      }
+      .alignItems(HorizontalAlign.Start).layoutWeight(1).margin({ left: 12 })
     }
     .width('100%')
-    .padding({ top: 12, bottom: 12 })
+    .padding({ top: 12, bottom: 12, left: 12, right: 14 })
     .backgroundColor(Color.White)
     .borderRadius(12)
-    .border({ width: 0.5, color: '#EEE' })
-    .alignItems(HorizontalAlign.Center)
+    .border({ width: 0.5, color: '#F0F0F0' })
     .onClick(() => { this.onToolClick(tool); })
   }
 
