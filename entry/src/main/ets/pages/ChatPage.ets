@@ -81,9 +81,14 @@ struct ChatPage {
   @State showBookView: boolean = false;  // 是否显示答案之书翻页
   @State bookQuestion: string = '';      // 答案之书的问题
   @State bookAnswer: string = '';        // 答案之书的答案
-  @State currentBreakpoint: BreakpointType = BreakpointType.SM;  // 当前断点
-  // 气泡最大宽度（响应式，通过 AppStorage 传递给子组件）
+  @State currentBreakpoint: BreakpointType = BreakpointType.SM;
   private bubbleMaxWidth: number = 320;
+  // 分屏工具模式（翻译/PPT等）
+  private isSplitTool: boolean = false;
+  @State splitSourceText: string = '';
+  @State splitResultText: string = '';
+  @State splitLoading: boolean = false;
+  @State splitToolLabel: string = '';  // 按钮文字 "翻译" / "生成讲稿"
 
   /**
    * 生命周期中只被调用一次，类似于iOS中的viewDidLoad、Android中的onCreate.
@@ -105,6 +110,16 @@ struct ChatPage {
       // 工具自定义参数
       let customPrompt = (params['customPrompt'] as string) || '';
       let toolAction = (params['toolAction'] as string) || '';
+
+      // 分屏工具模式（翻译/PPT）
+      if (this.contactId === 'tool_translate' || this.contactId === 'tool_ppt') {
+        this.isSplitTool = true;
+        this.isAIChat = true;
+        this.splitToolLabel = this.contactId === 'tool_translate' ? '翻译' : '生成讲稿';
+        this.aiPrompt = customPrompt;
+        // 不显示 greeting，直接进分屏
+        return;
+      }
 
       if (this.isAIChat) {
         // AI 模式：清空旧消息，加载 greeting
@@ -386,6 +401,27 @@ struct ChatPage {
   }
 
   /**
+   * 分屏工具：调用 AI 处理原文。
+   */
+  async doSplitTool() {
+    if (this.splitSourceText.trim().length === 0 || this.splitLoading) return;
+    this.splitLoading = true;
+    this.splitResultText = '处理中…';
+    try {
+      let msgs: ChatMessage[] = [
+        { role: 'system', content: this.aiPrompt },
+        { role: 'user', content: this.splitSourceText }
+      ];
+      let result = await DeepSeekService.getInstance().chat(msgs);
+      this.splitResultText = result;
+    } catch (e) {
+      this.splitResultText = '出错了，请重试';
+    } finally {
+      this.splitLoading = false;
+    }
+  }
+
+  /**
    * 滚动消息列表到最底部，以备显示最新消息。
    */
   scrollToBottom() {
@@ -509,6 +545,78 @@ struct ChatPage {
             this.searchKeyword = value;
           })
       }
+      // 分屏工具模式（翻译/PPT）— 左输入右结果
+      if (this.isSplitTool) {
+        Column() {
+          // 上半：原文输入
+          Column() {
+            Row() {
+              Text('📝 原文')
+                .fontSize(14).fontWeight(FontWeight.Bold)
+              Blank()
+              Text(this.splitSourceText.length.toString() + ' 字')
+                .fontSize(11).fontColor('#999')
+            }
+            .width('100%').margin({ bottom: 6 })
+
+            TextArea({ text: this.splitSourceText, placeholder: '在这里输入或粘贴原文…' })
+              .width('100%')
+              .layoutWeight(1)
+              .backgroundColor('#FAFAFA')
+              .borderRadius(8)
+              .padding(8)
+              .fontSize(14)
+              .onChange((v: string) => { this.splitSourceText = v; })
+          }
+          .width('92%')
+          .layoutWeight(1)
+          .margin({ top: 8 })
+
+          Divider().strokeWidth(1).color('#E0E0E0').width('92%')
+
+          // 下半：结果
+          Column() {
+            Row() {
+              Text('✨ 结果')
+                .fontSize(14).fontWeight(FontWeight.Bold)
+              Blank()
+              if (this.splitLoading) {
+                LoadingProgress().width(14).height(14)
+              }
+            }
+            .width('100%').margin({ bottom: 6 })
+
+            Scroll() {
+              Text(this.splitResultText || '点击下方按钮生成结果')
+                .fontSize(14)
+                .fontColor(this.splitResultText ? '#333' : '#BBB')
+                .width('100%')
+            }
+            .width('100%')
+            .layoutWeight(1)
+            .backgroundColor('#FAFAFA')
+            .borderRadius(8)
+            .padding(8)
+          }
+          .width('92%')
+          .layoutWeight(this.splitResultText ? 1.5 : 0.6)
+
+          // 执行按钮
+          Button(this.splitToolLabel)
+            .fontSize(15)
+            .fontColor(Color.White)
+            .backgroundColor(this.splitSourceText.trim() ? '#07C160' : '#CCC')
+            .borderRadius(20)
+            .width('60%')
+            .height(40)
+            .margin({ top: 10, bottom: 10 })
+            .enabled(this.splitSourceText.trim().length > 0 && !this.splitLoading)
+            .onClick(() => { this.doSplitTool(); })
+        }
+        .width('100%')
+        .layoutWeight(1)
+        .backgroundColor('#F5F5F5')
+      } else {
       // 聊天界面内容区（AI 与 IM 统一使用 MessagesDataSource + LazyForEach）
       Column() {
         // List性能需极致优化的情况下，还可使用"组件复用"技术，详见官方资料：
@@ -580,7 +688,7 @@ struct ChatPage {
         .backgroundColor('#f0f2f6')
       }
 
-      // 底部消息输入区
+      // 底部消息输入区（仅聊天模式）
       ChatInputView({
         isAI: this.isAIChat,
         receiverId: this.contactId,
@@ -588,6 +696,7 @@ struct ChatPage {
           this.sendMessageToAI(message);
         } : undefined
       })
+      } // end else (非分屏模式)
     }
     .width('100%')
     .height('100%')
