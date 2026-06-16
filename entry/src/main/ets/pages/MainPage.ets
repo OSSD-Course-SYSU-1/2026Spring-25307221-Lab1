@@ -5,6 +5,7 @@ import { CommunityPost, Comment, moodOptions, MoodRecord, TreeHolePost, generate
 import { BreakpointType, getBreakpoint } from './common/BreakpointSystem';
 import { window } from '@kit.ArkUI';
 import { promptAction } from '@kit.ArkUI';
+import { GameMenu, GuessNumber, SnakeGame, SlotMachine, MemoryMatch, PongGame, TetrisGame } from './components/MiniGameView';
 
 @Entry
 @Component
@@ -24,6 +25,7 @@ struct MainPage {
   @State showMoodPicker: boolean = false;
   @State showTreeHoleInput: boolean = false;
   @State treeHoleDraft: string = '';
+  @State currentGame: string = '';
   // 个人中心
   @State userNickname: string = 'HarmonyChat用户';
   @State editingNickname: boolean = false;
@@ -123,14 +125,14 @@ struct MainPage {
                   .fontWeight(FontWeight.Bold)
                   .fontColor('#555')
                   .width('100%')
-                  .padding({ left: 16, right: 16, top: 4, bottom: 4 })
+                  .padding({ left: 16, right: 16, top: 16, bottom: 4 })
 
                 Grid() {
                   ForEach(aiTools.filter((t: AITool) => t.category === '趣味生活'), (tool: AITool) => {
                     GridItem() { this.toolIcon(tool) }
                   }, (tool: AITool) => tool.id)
                 }
-                .columnsTemplate('1fr 1fr').columnsGap(10).rowsGap(10)
+                .columnsTemplate('1fr').rowsGap(8)
                 .width('100%').padding({ left: 14, right: 14, bottom: 16 })
               }
               .width('100%')
@@ -332,7 +334,36 @@ struct MainPage {
           .tabBar(this.TabBuilder('社区', 2, '🌐'))
           .align(Alignment.Top)
 
-          // ==================== Tab 3: 我的 ====================
+          // ==================== Tab 3: 游戏 ====================
+          TabContent() {
+            Stack() {
+              if (this.currentGame === '') {
+                Column() {
+                  GameMenu({
+                    onPlay: (gameId: string) => { this.currentGame = gameId; }
+                  })
+                }
+                .width('100%').height('100%').backgroundColor('#FAFAFA')
+              } else if (this.currentGame === '猜数字') {
+                GuessNumber({ onBack: () => { this.currentGame = ''; } })
+              } else if (this.currentGame === '贪吃蛇') {
+                SnakeGame({ onBack: () => { this.currentGame = ''; } })
+              } else if (this.currentGame === '老虎机') {
+                SlotMachine({ onBack: () => { this.currentGame = ''; } })
+              } else if (this.currentGame === '记忆翻牌') {
+                MemoryMatch({ onBack: () => { this.currentGame = ''; } })
+              } else if (this.currentGame === '乒乓球') {
+                PongGame({ onBack: () => { this.currentGame = ''; } })
+              } else if (this.currentGame === '俄罗斯方块') {
+                TetrisGame({ onBack: () => { this.currentGame = ''; } })
+              }
+            }
+            .width('100%').height('100%')
+          }
+          .tabBar(this.TabBuilder('游戏', 3, '🎮'))
+          .align(Alignment.Top)
+
+          // ==================== Tab 4: 我的 ====================
           TabContent() {
             Column() {
               Row() {
@@ -428,7 +459,7 @@ struct MainPage {
             .height('100%')
             .backgroundColor('#F5F5F5')
           }
-          .tabBar(this.TabBuilder('我的', 3, '👤'))
+          .tabBar(this.TabBuilder('我的', 4, '👤'))
           .align(Alignment.Top)
         }
         .layoutWeight(1)
