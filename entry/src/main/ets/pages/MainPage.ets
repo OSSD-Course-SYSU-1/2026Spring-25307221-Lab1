@@ -2,7 +2,7 @@ import { allContacts, recentContacts, Contact } from '../model/ContactModel';
 import router from '@ohos.router';
 import { aiCharacters, AICharacter } from '../model/AICharacterData'
 import { aiTools, AITool } from '../model/ToolData'
-import { CommunityPost, moodOptions, MoodRecord, TreeHolePost, generateAIFeed, aiFriends, AIFriend } from '../model/CommunityData'
+import { CommunityPost, Comment, moodOptions, MoodRecord, TreeHolePost, generateAIFeed, aiFriends, AIFriend } from '../model/CommunityData'
 import { BreakpointType, getBreakpoint } from './common/BreakpointSystem';
 import { window } from '@kit.ArkUI';
 import { promptAction } from '@kit.ArkUI';
@@ -756,54 +756,73 @@ struct MainPage {
   @Builder postCard(post: CommunityPost) {
     Column() {
       Row() {
-        Text(post.userAvatar)
-          .fontSize(34)
+        Text(post.userAvatar).fontSize(34)
         Column() {
-          Text(post.userName)
-            .fontSize(14)
-            .fontWeight(FontWeight.Bold)
-          Text(post.timeAgo)
-            .fontSize(11)
-            .fontColor('#999')
+          Text(post.userName).fontSize(14).fontWeight(FontWeight.Bold)
+          Text(post.timeAgo).fontSize(11).fontColor('#999')
         }
-        .margin({ left: 10 })
-        .alignItems(HorizontalAlign.Start)
+        .margin({ left: 10 }).alignItems(HorizontalAlign.Start)
       }
       .width('100%')
 
-      Text(post.content)
-        .fontSize(14)
-        .fontColor('#333')
-        .lineHeight(20)
-        .margin({ top: 8, bottom: 10 })
-        .maxLines(6)
+      Text(post.content).fontSize(14).fontColor('#333').lineHeight(20)
+        .margin({ top: 8, bottom: 10 }).maxLines(6)
         .textOverflow({ overflow: TextOverflow.Ellipsis })
 
+      // 点赞+评论按钮
       Row() {
         Row() {
-          Text(post.isLiked ? '❤️' : '🤍')
-            .fontSize(14)
-          Text(post.likeCount.toString())
-            .fontSize(12)
-            .fontColor('#999')
-            .margin({ left: 4 })
+          Text(post.isLiked ? '❤️' : '🤍').fontSize(14)
+          Text(post.likeCount > 0 ? post.likeCount.toString() : '').fontSize(12).fontColor('#999').margin({ left: 2 })
         }
-        .onClick(() => {
-          post.isLiked = !post.isLiked;
-          post.isLiked ? post.likeCount++ : post.likeCount--;
-        })
+        .onClick(() => { post.isLiked = !post.isLiked; post.isLiked ? post.likeCount++ : post.likeCount--; })
+
         Row() {
-          Text('💬 ' + post.commentCount.toString())
-            .fontSize(12)
-            .fontColor('#999')
+          Text('💬').fontSize(14)
+          Text(post.comments.length > 0 ? post.comments.length.toString() : '').fontSize(12).fontColor('#999').margin({ left: 2 })
         }
         .margin({ left: 24 })
+        .onClick(() => { post.showComments = !post.showComments; })
+      }
+
+      // 评论区
+      if (post.showComments) {
+        Column() {
+          // AI评论
+          ForEach(post.comments, (c: Comment) => {
+            Row() {
+              Text(c.userAvatar).fontSize(18)
+              Text(c.userName).fontSize(12).fontWeight(FontWeight.Bold).fontColor('#555').margin({ left: 6 })
+              Text('：' + c.content).fontSize(12).fontColor('#666').maxLines(1)
+                .textOverflow({ overflow: TextOverflow.Ellipsis }).layoutWeight(1)
+            }
+            .width('100%').padding({ top: 3, bottom: 3 })
+          }, (c: Comment, i: number) => c.userName + i.toString())
+
+          Divider().strokeWidth(0.5).color('#EEE').margin({ top: 4, bottom: 4 })
+
+          // 用户评论输入
+          Row() {
+            Text('👤').fontSize(16)
+            TextInput({ placeholder: '说点什么…' })
+              .fontSize(12).backgroundColor('#F5F5F5').borderRadius(12).height(28).layoutWeight(1)
+              .padding({ left: 10, right: 10 }).margin({ left: 6, right: 6 })
+              .onSubmit((enter: SubmitEvent) => {
+                let text = enter.text;
+                if (text && text.trim().length > 0) {
+                  post.comments.push({ userName: '我', userAvatar: '👤', content: text, isAI: false });
+                }
+              })
+          }
+          .width('100%')
+        }
+        .width('100%').margin({ top: 8 }).padding({ top: 8, left: 4, right: 4 })
+        .backgroundColor('#FAFAFA').borderRadius(8)
       }
     }
     .width('100%')
     .padding({ top: 14, bottom: 14, left: 14, right: 14 })
-    .backgroundColor(Color.White)
-    .borderRadius(12)
+    .backgroundColor(Color.White).borderRadius(12)
   }
 
   // 工具点击处理

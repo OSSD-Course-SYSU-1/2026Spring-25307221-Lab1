@@ -2,6 +2,14 @@
  * 社区数据模型 — AI朋友圈 + 心情日记 + 树洞 + 打卡。
  */
 
+// 评论
+export interface Comment {
+  userName: string;
+  userAvatar: string;
+  content: string;
+  isAI: boolean;  // true=AI朋友, false=用户
+}
+
 // 帖子
 export interface CommunityPost {
   id: string;
@@ -9,9 +17,10 @@ export interface CommunityPost {
   userAvatar: string;
   content: string;
   likeCount: number;
-  commentCount: number;
   timeAgo: string;
   isLiked: boolean;
+  comments: Comment[];
+  showComments: boolean;  // UI状态：是否展开评论区
 }
 
 // 心情选项
@@ -164,9 +173,46 @@ function getTreeHoleResponsePosts(treeHoleContent: string): MoodPostEntry[] {
  * @param userMood 用户今日心情emoji（空字符串表示未设置）
  * @param treeHolePosts 用户最近的树洞帖子
  */
+// 随机生成AI朋友间的评论
+function genAICComments(postAuthor: string, postContent: string, friends: AIFriend[]): Comment[] {
+  let comments: Comment[] = [];
+  let count = Math.floor(Math.random() * 3) + 1; // 1-3条评论
+  let replyPool = [
+    '说得太对了！',
+    '哈哈哈笑死',
+    '深有同感～',
+    '学到了学到了',
+    '加油加油💪',
+    '真的假的？！',
+    '我也遇到了一样的事',
+    '太棒了吧！',
+    '写得真好',
+    '收藏了！',
+    '有被鼓励到✨',
+    '手动点赞',
+    '这就是我想说的',
+    '不愧是你',
+    '有点道理🤔'
+  ];
+  for (let i = 0; i < count; i++) {
+    let f: AIFriend = friends[Math.floor(Math.random() * friends.length)];
+    if (f.name === postAuthor) {
+      // 不自己评论自己，换一个
+      f = friends[(friends.indexOf(f) + 1) % friends.length];
+    }
+    let c: Comment = {
+      userName: f.name,
+      userAvatar: f.emoji,
+      content: replyPool[Math.floor(Math.random() * replyPool.length)],
+      isAI: true
+    };
+    comments.push(c);
+  }
+  return comments;
+}
+
 export function generateAIFeed(userMood: string, treeHolePosts: TreeHolePost[]): CommunityPost[] {
   let moods: MoodPostEntry[] = getMoodPosts(userMood || '😊');
-  // 随机打乱帖子顺序
   for (let i = moods.length - 1; i > 0; i--) {
     let j = Math.floor(Math.random() * (i + 1));
     let t = moods[i];
@@ -183,10 +229,11 @@ export function generateAIFeed(userMood: string, treeHolePosts: TreeHolePost[]):
       userName: m.friend.name,
       userAvatar: m.friend.emoji,
       content: m.content,
-      likeCount: Math.floor(Math.random() * 400) + 15,
-      commentCount: Math.floor(Math.random() * 50) + 2,
+      likeCount: Math.floor(Math.random() * 8) + 1,  // 1-8个赞，真实小社区
       timeAgo: times[Math.floor(Math.random() * times.length)],
-      isLiked: Math.random() > 0.7
+      isLiked: Math.random() > 0.7,
+      comments: genAICComments(m.friend.name, m.content, aiFriends),
+      showComments: false
     };
     posts.push(cp);
   }
@@ -202,16 +249,16 @@ export function generateAIFeed(userMood: string, treeHolePosts: TreeHolePost[]):
         userName: r.friend.name,
         userAvatar: r.friend.emoji,
         content: r.content,
-        likeCount: Math.floor(Math.random() * 250) + 8,
-        commentCount: Math.floor(Math.random() * 25) + 1,
+        likeCount: Math.floor(Math.random() * 6) + 1,
         timeAgo: times[Math.floor(Math.random() * times.length)],
-        isLiked: false
+        isLiked: false,
+        comments: genAICComments(r.friend.name, r.content, aiFriends),
+        showComments: false
       };
       treeHoleResponses.push(thr);
     }
   }
 
-  // 混合后随机打乱
   let allPosts: CommunityPost[] = posts.concat(treeHoleResponses);
   for (let i = allPosts.length - 1; i > 0; i--) {
     let j = Math.floor(Math.random() * (i + 1));
