@@ -2,7 +2,7 @@ import { allContacts, recentContacts, Contact } from '../model/ContactModel';
 import router from '@ohos.router';
 import { aiCharacters, AICharacter } from '../model/AICharacterData'
 import { aiTools, AITool } from '../model/ToolData'
-import { CommunityPost, moodOptions, MoodRecord, TreeHolePost, generateAIFeed } from '../model/CommunityData'
+import { CommunityPost, moodOptions, MoodRecord, TreeHolePost, generateAIFeed, aiFriends, AIFriend } from '../model/CommunityData'
 import { BreakpointType, getBreakpoint } from './common/BreakpointSystem';
 import { window } from '@kit.ArkUI';
 import { promptAction } from '@kit.ArkUI';
@@ -18,6 +18,7 @@ struct MainPage {
   @State userStreak: number = 0;
   @State checkedInToday: boolean = false;
   @State todayMood: string = '';
+  @State todayMoodTime: string = '';
   @State moodHistory: MoodRecord[] = [];
   @State treeHolePosts: TreeHolePost[] = [];
   @State posts: CommunityPost[] = [];
@@ -70,11 +71,11 @@ struct MainPage {
               .padding({ left: 16, right: 16 })
 
               List({ space: 2 }) {
-                ForEach(recentContacts, (contact: Contact) => {
+                ForEach(aiFriends, (friend: AIFriend) => {
                   ListItem() {
-                    this.contactItem(contact)
+                    this.friendItem(friend)
                   }
-                }, (contact: Contact) => contact.id)
+                }, (friend: AIFriend) => friend.name)
               }
               .width('100%')
               .layoutWeight(1)
@@ -200,7 +201,7 @@ struct MainPage {
                 Row() {
                   Text(this.todayMood || '📔')
                     .fontSize(22)
-                  Text(this.todayMood ? '今天 ' + this.getMoodLabel() : '记录心情')
+                  Text(this.todayMood ? this.todayMoodTime + ' ' + this.getMoodLabel() : '记录心情')
                     .fontSize(12)
                     .fontColor(this.todayMood ? '#333' : '#999')
                     .margin({ left: 6 })
@@ -248,9 +249,18 @@ struct MainPage {
                     .backgroundColor(this.todayMood === m.emoji ? '#F0F0F0' : Color.Transparent)
                     .onClick(() => {
                       this.todayMood = m.emoji;
+                      let now = new Date();
+                      this.todayMoodTime = now.getHours().toString().padStart(2, '0') + ':' +
+                        now.getMinutes().toString().padStart(2, '0');
+                      this.moodHistory.push({
+                        date: this.todayStr,
+                        time: this.todayMoodTime,
+                        emoji: m.emoji,
+                        label: m.label
+                      });
                       this.showMoodPicker = false;
-                      this.refreshFeed();  // 刷新AI朋友圈
-                      promptAction.showToast({ message: '今日心情：' + m.label });
+                      this.refreshFeed();
+                      promptAction.showToast({ message: this.todayMoodTime + ' 心情：' + m.label });
                     })
                   })
                 }
@@ -260,6 +270,21 @@ struct MainPage {
                 .borderRadius(14)
                 .margin({ left: 12, right: 12, bottom: 6 })
                 .justifyContent(FlexAlign.SpaceEvenly)
+              }
+
+              // 今日心情时间线
+              if (this.moodHistory.filter((r: MoodRecord) => r.date === this.todayStr).length > 0) {
+                Row() {
+                  ForEach(this.moodHistory.filter((r: MoodRecord) => r.date === this.todayStr), (r: MoodRecord, idx: number) => {
+                    Row() {
+                      Text(r.emoji).fontSize(14)
+                      Text(r.time).fontSize(9).fontColor('#aaa').margin({ left: 3 })
+                    }
+                    .margin({ right: idx < this.moodHistory.length - 1 ? 10 : 0 })
+                  }, (r: MoodRecord, idx: number) => r.time + idx.toString())
+                }
+                .width('90%')
+                .padding({ top: 2, bottom: 6, left: 4 })
               }
 
               // 树洞输入区（点击展开）
@@ -461,6 +486,42 @@ struct MainPage {
     .height(56)
     .padding({ left: 16, right: 16 })
     .backgroundColor(Color.White)
+  }
+
+  // AI朋友条目（消息Tab）
+  @Builder friendItem(friend: AIFriend) {
+    Row() {
+      Text(friend.emoji)
+        .fontSize(36)
+      Column() {
+        Text(friend.name)
+          .fontSize(17)
+          .fontWeight(FontWeight.Bold)
+        Text(friend.personality)
+          .fontSize(13)
+          .fontColor('#888')
+          .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
+      }
+      .alignItems(HorizontalAlign.Start)
+      .layoutWeight(1)
+      .margin({ left: 12 })
+    }
+    .width('100%')
+    .padding({ top: 12, bottom: 12, left: 14, right: 14 })
+    .backgroundColor(Color.White)
+    .onClick(() => {
+      router.pushUrl({
+        url: 'pages/ChatPage',
+        params: {
+          contactId: 'friend_' + friend.name,
+          contactName: friend.name,
+          greeting: friend.chatGreeting,
+          isAI: true,
+          customPrompt: friend.chatPrompt
+        }
+      });
+    })
   }
 
   // 联系人条目
