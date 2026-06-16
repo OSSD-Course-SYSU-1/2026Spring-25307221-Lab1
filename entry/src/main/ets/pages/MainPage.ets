@@ -30,7 +30,8 @@ struct MainPage {
   @State currentGame: string = '';
   // 个人中心
   @State userNickname: string = 'HarmonyChat用户';
-  @State showSettings: boolean = false;
+  @State editingNickname: boolean = false;
+  @State nicknameDraft: string = '';
   @State isDarkMode: boolean = false;
   @State fontSize: number = 14;
   private todayStr: string = new Date().getFullYear().toString() + '-' +
@@ -392,25 +393,38 @@ struct MainPage {
                 .margin({ right: 16 })
 
                 Column() {
-                  Text(this.userNickname)
-                    .fontSize(18).fontWeight(FontWeight.Bold)
-                  Text('点击修改昵称和头像')
-                    .fontSize(13).fontColor('#999').margin({ top: 4 })
+                  if (this.editingNickname) {
+                    TextInput({ text: this.nicknameDraft, placeholder: '输入新昵称' })
+                      .fontSize(16).width('80%').height(36).backgroundColor('#F5F5F5').borderRadius(8)
+                      .padding({ left: 8, right: 8 })
+                      .onChange((value: string) => { this.nicknameDraft = value; })
+                  } else {
+                    Text(this.userNickname)
+                      .fontSize(18).fontWeight(FontWeight.Bold)
+                    Text('点击修改昵称')
+                      .fontSize(13).fontColor('#999').margin({ top: 4 })
+                  }
                 }
                 .alignItems(HorizontalAlign.Start).layoutWeight(1)
 
-                Text('›').fontSize(24).fontColor('#CCC')
+                if (this.editingNickname) {
+                  Text('保存').fontSize(14).fontColor('#07C160').fontWeight(FontWeight.Bold)
+                    .onClick(() => {
+                      if (this.nicknameDraft.trim().length > 0) {
+                        this.userNickname = this.nicknameDraft.trim();
+                      }
+                      this.editingNickname = false;
+                    })
+                } else {
+                  Text('›').fontSize(24).fontColor('#CCC')
+                }
               }
               .width('100%').padding(16).backgroundColor(Color.White).margin({ bottom: 10 })
               .onClick(() => {
-                // 修改昵称
-                let newName: string[] = [this.userNickname];
-                AlertDialog.show({
-                  title: '修改昵称',
-                  message: '请输入新昵称：',
-                  primaryButton: { value: '保存', action: () => {} },
-                  secondaryButton: { value: '取消', action: () => {} }
-                });
+                if (!this.editingNickname) {
+                  this.editingNickname = true;
+                  this.nicknameDraft = this.userNickname;
+                }
               })
 
               // 功能列表

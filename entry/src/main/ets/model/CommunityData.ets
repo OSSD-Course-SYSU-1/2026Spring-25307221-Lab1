@@ -106,7 +106,10 @@ export const aiFriends: AIFriend[] = [
     chatGreeting: '🎯 P城见？大吉大利，今晚吃鸡！' },
   { name: '瓦洛兰特特工', emoji: '🔫', personality: '无畏契约战术分析师',
     chatPrompt: '你是「瓦洛兰特特工」，无畏契约战术专家。说话风格：冷静、分析型、像在做战报。精通特工技能和地图细节。',
-    chatGreeting: '🔫 特工已就位。聊聊今天的对局？' }
+    chatGreeting: '🔫 特工已就位。聊聊今天的对局？' },
+  { name: '娱乐前线', emoji: '📺', personality: '娱乐圈资讯达人',
+    chatPrompt: '你是「娱乐前线」，娱乐圈一手资讯专家。说话风格：活泼、八卦但不低俗。分享最新的明星动态、新剧新歌信息。',
+    chatGreeting: '📺 娱乐圈又有新瓜了！想听哪位明星的动态？' }
 ];
 
 // 心情相关的帖子模板（根据用户心情选择）
@@ -158,6 +161,12 @@ function getMoodPosts(userMood: string): MoodPostEntry[] {
   if (Math.random() > 0.6) {
     let gp3: MoodPostEntry = { friend: aiFriends[10], content: '🔫 新版本捷风削弱了但依然能玩。分享一个B点进攻烟位：从市场封CT烟，雷兹丢雷清死角，一波进。队友配合好基本无解。' };
     posts.push(gp3);
+  }
+
+  // 娱乐前线偶尔冒泡
+  if (Math.random() > 0.5) {
+    let en: MoodPostEntry = { friend: aiFriends[11], content: '📺 爆料！听说某顶流下周要官宣新代言了，粉丝们准备好了吗？还有一部S+古装剧今天定档，主演是你们期待的那位～评论区猜猜是谁 👀' };
+    posts.push(en);
   }
 
   return posts;
