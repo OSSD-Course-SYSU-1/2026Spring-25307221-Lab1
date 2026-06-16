@@ -91,19 +91,19 @@ export struct WhackAMole {
   @StorageProp('high_whack') highScore: number = 0;
   onBack?: () => void;
 
-  start() { this.score=0; this.timeLeft=30; this.playing=true; this.gameOver=false;
+  start(): void { this.score=0; this.timeLeft=30; this.playing=true; this.gameOver=false;
     this.holes=[false,false,false,false,false,false,false,false,false];
     this.cdTimer=setInterval(()=>{this.timeLeft--; if(this.timeLeft<=0)this.stop();},1000);
     this.pop(); }
-  stop() { this.playing=false; this.gameOver=true; clearInterval(this.moleTimer); clearInterval(this.cdTimer);
+  stop(): void { this.playing=false; this.gameOver=true; clearInterval(this.moleTimer); clearInterval(this.cdTimer);
     this.holes=[false,false,false,false,false,false,false,false,false];
     if(this.score>this.highScore){AppStorage.setOrCreate<number>('high_whack',this.score); this.highScore=this.score;} }
-  pop() { if(!this.playing)return; let i=Math.floor(Math.random()*9); this.holes[i]=true; this.holes=[...this.holes];
+  pop(): void { if(!this.playing)return; let i=Math.floor(Math.random()*9); this.holes[i]=true; this.holes=[...this.holes];
     this.moleTimer=setTimeout(()=>{this.holes[i]=false;this.holes=[...this.holes];
     if(this.playing)setTimeout(()=>this.pop(),300+Math.random()*600);},600+Math.random()*400); }
-  hit(i:number){if(!this.playing||!this.holes[i])return; this.holes[i]=false; this.holes=[...this.holes]; this.score++;}
+  hit(i:number): void {if(!this.playing||!this.holes[i])return; this.holes[i]=false; this.holes=[...this.holes]; this.score++;}
 
-  aboutToDisappear(){clearInterval(this.moleTimer);clearInterval(this.cdTimer);}
+  aboutToDisappear(): void {clearInterval(this.moleTimer);clearInterval(this.cdTimer);}
 
   build(){Column(){
     Row(){Text('←').fontSize(24).onClick(()=>{this.stop();if(this.onBack)this.onBack();}) Blank()
@@ -135,26 +135,26 @@ export struct SnakeGame {
   @State snake: number[][] = [[7,7],[7,8],[7,9]]; @State food: number[] = [3,5];
   @State dir: string = 'UP'; @State score: number = 0;
   @State playing: boolean = false; @State over: boolean = false;
-  private timer: number = -1; private size: number = 15;
+  private timer: number = -1; private gridSize: number = 15;
   private rows: string[] = ['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14'];
   private cols: string[] = ['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14'];
   @StorageProp('high_snake') highScore: number = 0;
   onBack?: () => void;
 
-  start() { this.snake=[[7,7],[7,8],[7,9]]; this.dir='UP'; this.score=0; this.playing=true; this.over=false;
+  start(): void { this.snake=[[7,7],[7,8],[7,9]]; this.dir='UP'; this.score=0; this.playing=true; this.over=false;
     this.spawn(); this.timer=setInterval(()=>this.move(),200); }
-  spawn() { let r=0,c=0; for(let t=0;t<100;t++){r=Math.floor(Math.random()*this.size);c=Math.floor(Math.random()*this.size);if(!this.onSnake(r,c))break;} this.food=[r,c]; }
+  spawn(): void { let r=0,c=0; for(let t=0;t<100;t++){r=Math.floor(Math.random()*this.gridSize);c=Math.floor(Math.random()*this.gridSize);if(!this.onSnake(r,c))break;} this.food=[r,c]; }
   onSnake(r:number,c:number):boolean{for(let i=0;i<this.snake.length;i++){let s=this.snake[i];if(s[0]===r&&s[1]===c)return true;}return false;}
-  move(){let h=this.snake[0];let nh=[h[0],h[1]];
+  move(): void {let h=this.snake[0];let nh=[h[0],h[1]];
     if(this.dir==='UP')nh[0]--;if(this.dir==='DOWN')nh[0]++;if(this.dir==='LEFT')nh[1]--;if(this.dir==='RIGHT')nh[1]++;
-    if(nh[0]<0||nh[1]<0||nh[0]>=this.size||nh[1]>=this.size||this.onSnake(nh[0],nh[1])){this.die();return;}
+    if(nh[0]<0||nh[1]<0||nh[0]>=this.gridSize||nh[1]>=this.gridSize||this.onSnake(nh[0],nh[1])){this.die();return;}
     let ns=[nh];for(let i=0;i<this.snake.length-1;i++)ns.push(this.snake[i]);
     if(nh[0]===this.food[0]&&nh[1]===this.food[1]){ns.push(this.snake[this.snake.length-1]);this.score+=10;this.spawn();}
     this.snake=ns;}
-  die(){this.playing=false;this.over=true;clearInterval(this.timer);
+  die(): void {this.playing=false;this.over=true;clearInterval(this.timer);
     if(this.score>this.highScore){AppStorage.setOrCreate<number>('high_snake',this.score);this.highScore=this.score;}}
-  key(k:string){if(!this.playing)return;if(k==='UP'&&this.dir!=='DOWN')this.dir='UP';if(k==='DOWN'&&this.dir!=='UP')this.dir='DOWN';if(k==='LEFT'&&this.dir!=='RIGHT')this.dir='LEFT';if(k==='RIGHT'&&this.dir!=='LEFT')this.dir='RIGHT';}
-  aboutToDisappear(){clearInterval(this.timer);}
+  handleKey(k:string): void {if(!this.playing)return;if(k==='UP'&&this.dir!=='DOWN')this.dir='UP';if(k==='DOWN'&&this.dir!=='UP')this.dir='DOWN';if(k==='LEFT'&&this.dir!=='RIGHT')this.dir='LEFT';if(k==='RIGHT'&&this.dir!=='LEFT')this.dir='RIGHT';}
+  aboutToDisappear(): void {clearInterval(this.timer);}
 
   build(){Column(){
     Row(){Text('←').fontSize(24).onClick(()=>{this.die();if(this.onBack)this.onBack();})Blank()
@@ -175,7 +175,7 @@ export struct SnakeGame {
       Button('再来一局').fontSize(16).fontColor(Color.White).backgroundColor('#4ECDC4').borderRadius(20).width('50%').height(40).margin({top:12}).onClick(()=>this.start())}.margin({bottom:50})}
   }.width('100%').height('100%').backgroundColor('#FAFFFA')}
 
-  @Builder Btn(l:string,k:string){Text(l).fontSize(32).width(60).height(56).backgroundColor('#E0F0E0').borderRadius(12).textAlign(TextAlign.Center).onClick(()=>this.key(k))}
+  @Builder Btn(l:string,k:string){Text(l).fontSize(32).width(60).height(56).backgroundColor('#E0F0E0').borderRadius(12).textAlign(TextAlign.Center).onClick(()=>this.handleKey(k))}
 }
 
 // ==================== 老虎机 ====================
@@ -188,11 +188,11 @@ export struct SlotMachine {
   @StorageProp('high_slot') highScore: number = 0;
   onBack?: () => void;
 
-  spin() { if(this.spinning||this.score<10)return; this.spinning=true; this.score-=10; this.msg='旋转中…';
+  spin(): void { if(this.spinning||this.score<10)return; this.spinning=true; this.score-=10; this.msg='旋转中…';
     let cnt=0; this.anim=setInterval(()=>{this.reels=[this.rnd(),this.rnd(),this.rnd()];cnt++;
     if(cnt>=12){clearInterval(this.anim);this.stopSpin();}},120); }
   rnd():string{return this.icons[Math.floor(Math.random()*this.icons.length)];}
-  stopSpin(){this.spinning=false;
+  stopSpin(): void {this.spinning=false;
     if(this.reels[0]===this.reels[1]&&this.reels[1]===this.reels[2]){let win=this.reels[0]==='7️⃣'?200:this.reels[0]==='💎'?150:this.reels[0]==='⭐'?100:50;
       this.score+=win;this.msg='🎉 中奖！+'+win.toString();}
     else if(this.reels[0]===this.reels[1]||this.reels[1]===this.reels[2]||this.reels[0]===this.reels[2]){this.score+=20;this.msg='👍 小奖 +20';}
