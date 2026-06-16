@@ -28,6 +28,11 @@ struct MainPage {
   @State treeHoleDraft: string = '';
   // 游戏状态
   @State currentGame: string = '';
+  // 个人中心
+  @State userNickname: string = 'HarmonyChat用户';
+  @State showSettings: boolean = false;
+  @State isDarkMode: boolean = false;
+  @State fontSize: number = 14;
   private todayStr: string = new Date().getFullYear().toString() + '-' +
     ((new Date().getMonth() + 1).toString().padStart(2, '0')) + '-' +
     (new Date().getDate().toString().padStart(2, '0'));
@@ -144,9 +149,10 @@ struct MainPage {
               // 标题栏 + 打卡
               Row() {
                 Text('社区')
-                  .fontSize(20)
-                  .fontWeight(FontWeight.Bold)
-                  .layoutWeight(1)
+                  .fontSize(20).fontWeight(FontWeight.Bold).layoutWeight(1)
+
+                Text('🔄').fontSize(18).margin({ right: 10 })
+                  .onClick(() => { this.refreshFeed(); })
 
                 // 迷你打卡
                 Row() {
@@ -386,33 +392,51 @@ struct MainPage {
                 .margin({ right: 16 })
 
                 Column() {
-                  Text('HarmonyChat用户')
-                    .fontSize(18)
-                    .fontWeight(FontWeight.Bold)
-                  Text('微信号：wxid_xxx')
-                    .fontSize(14)
-                    .fontColor('#999999')
-                    .margin({ top: 4 })
+                  Text(this.userNickname)
+                    .fontSize(18).fontWeight(FontWeight.Bold)
+                  Text('点击修改昵称和头像')
+                    .fontSize(13).fontColor('#999').margin({ top: 4 })
                 }
-                .alignItems(HorizontalAlign.Start)
-                .layoutWeight(1)
+                .alignItems(HorizontalAlign.Start).layoutWeight(1)
 
-                Text('›')
-                  .fontSize(24)
-                  .fontColor('#CCC')
+                Text('›').fontSize(24).fontColor('#CCC')
               }
-              .width('100%')
-              .padding(16)
-              .backgroundColor(Color.White)
-              .margin({ bottom: 10 })
+              .width('100%').padding(16).backgroundColor(Color.White).margin({ bottom: 10 })
+              .onClick(() => {
+                // 修改昵称
+                let newName: string[] = [this.userNickname];
+                AlertDialog.show({
+                  title: '修改昵称',
+                  message: '请输入新昵称：',
+                  primaryButton: { value: '保存', action: () => {} },
+                  secondaryButton: { value: '取消', action: () => {} }
+                });
+              })
 
               // 功能列表
               List({ space: 1 }) {
                 ListItem() {
-                  this.ListMenuItemBuilder('历史记录', $r('app.media.app_icon'))
+                  Row() {
+                    Text('🌙').fontSize(18).margin({ right: 14 })
+                    Text('深色模式').fontSize(16).layoutWeight(1)
+                    Toggle({ type: ToggleType.Switch, isOn: this.isDarkMode })
+                      .onChange((value: boolean) => {
+                        this.isDarkMode = value;
+                        promptAction.showToast({ message: value ? '深色模式已开启' : '浅色模式已开启' });
+                      })
+                  }
+                  .width('100%').height(56).padding({ left: 16, right: 16 }).backgroundColor(Color.White)
                 }
                 ListItem() {
-                  this.ListMenuItemBuilder('设置', $r('app.media.app_icon'))
+                  Row() {
+                    Text('🔤').fontSize(18).margin({ right: 14 })
+                    Text('字体大小：' + this.fontSize.toString() + 'px').fontSize(16).layoutWeight(1)
+                    Text('A+').fontSize(13).fontColor('#07C160').margin({ right: 6 })
+                      .onClick(() => { if (this.fontSize < 20) { this.fontSize = this.fontSize + 1; } })
+                    Text('A-').fontSize(13).fontColor('#FF6B6B')
+                      .onClick(() => { if (this.fontSize > 10) { this.fontSize = this.fontSize - 1; } })
+                  }
+                  .width('100%').height(56).padding({ left: 16, right: 16 }).backgroundColor(Color.White)
                 }
               }
               .width('100%')
@@ -631,40 +655,19 @@ struct MainPage {
     })
   }
 
-  // 工具图标卡片（2列网格，紧凑布局）
+  // 工具图标卡片（紧凑布局）
   @Builder toolIcon(tool: AITool) {
     Column() {
-      Column() {
-        Text(tool.emoji).fontSize(32)
-      }
-      .width(56).height(56)
-      .borderRadius(16)
-      .backgroundColor(tool.bgColor)
-      .justifyContent(FlexAlign.Center)
-      .alignItems(HorizontalAlign.Center)
-
-      Text(tool.name)
-        .fontSize(14)
-        .fontWeight(FontWeight.Medium)
-        .fontColor('#1a1a1a')
-        .margin({ top: 8 })
-        .maxLines(1)
-
-      Text(tool.description)
-        .fontSize(11)
-        .fontColor('#aaa')
-        .margin({ top: 2 })
-        .maxLines(1)
-        .textOverflow({ overflow: TextOverflow.Ellipsis })
+      Text(tool.emoji).fontSize(28)
+      Text(tool.name).fontSize(12).fontWeight(FontWeight.Medium).fontColor('#1a1a1a').margin({ top: 4 })
     }
     .width('100%')
-    .padding({ top: 14, bottom: 14, left: 6, right: 6 })
+    .padding({ top: 12, bottom: 12 })
     .backgroundColor(Color.White)
-    .borderRadius(14)
+    .borderRadius(12)
+    .border({ width: 0.5, color: '#EEE' })
     .alignItems(HorizontalAlign.Center)
-    .onClick(() => {
-      this.onToolClick(tool);
-    })
+    .onClick(() => { this.onToolClick(tool); })
   }
 
   // 刷新AI朋友圈动态

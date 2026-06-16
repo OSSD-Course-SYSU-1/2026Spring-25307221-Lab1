@@ -231,7 +231,7 @@ export function generateAIFeed(userMood: string, treeHolePosts: TreeHolePost[]):
       content: m.content,
       likeCount: Math.floor(Math.random() * 8) + 1,  // 1-8个赞，真实小社区
       timeAgo: times[Math.floor(Math.random() * times.length)],
-      isLiked: Math.random() > 0.7,
+      isLiked: false,  // 用户自己决定是否点赞
       comments: genAICComments(m.friend.name, m.content, aiFriends),
       showComments: false
     };
