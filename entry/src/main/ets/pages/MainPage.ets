@@ -5,7 +5,7 @@ import { CommunityPost, Comment, moodOptions, MoodRecord, TreeHolePost, generate
 import { BreakpointType, getBreakpoint } from './common/BreakpointSystem';
 import { window } from '@kit.ArkUI';
 import { promptAction } from '@kit.ArkUI';
-import { GameMenu, GuessNumber, SnakeGame, SlotMachine, MemoryMatch, PongGame, TetrisGame } from './components/MiniGameView';
+import { GameMenu, GuessNumber, SnakeGame, SlotMachine, ReactionTest, PongGame, TetrisGame } from './components/MiniGameView';
 
 @Entry
 @Component
@@ -350,8 +350,8 @@ struct MainPage {
                 SnakeGame({ onBack: () => { this.currentGame = ''; } })
               } else if (this.currentGame === '老虎机') {
                 SlotMachine({ onBack: () => { this.currentGame = ''; } })
-              } else if (this.currentGame === '记忆翻牌') {
-                MemoryMatch({ onBack: () => { this.currentGame = ''; } })
+              } else if (this.currentGame === '反应测试') {
+                ReactionTest({ onBack: () => { this.currentGame = ''; } })
               } else if (this.currentGame === '乒乓球') {
                 PongGame({ onBack: () => { this.currentGame = ''; } })
               } else if (this.currentGame === '俄罗斯方块') {

@@ -17,7 +17,7 @@ export struct GameMenu {
         GridItem() { this.Card('🐍', '贪吃蛇', '经典重现', '#4ECDC4') }
         GridItem() { this.Card('🧱', '俄罗斯方块', '消除得分', '#45B7D1') }
         GridItem() { this.Card('🏓', '乒乓球', '对战胜AI', '#F7DC6F') }
-        GridItem() { this.Card('🃏', '记忆翻牌', '找出配对', '#BB8FCE') }
+        GridItem() { this.Card('⚡', '反应测试', '测测你的手速', '#BB8FCE') }
         GridItem() { this.Card('🎰', '老虎机', '拉杆拼运气', '#F0B27A') }
       }
       .columnsTemplate('1fr 1fr').columnsGap(12).rowsGap(12).width('100%')
@@ -484,141 +484,84 @@ export struct SlotMachine {
   }
 }
 
-// ==================== 记忆翻牌 ====================
+// ==================== 反应速度测试 ====================
 @Component
-export struct MemoryMatch {
-  @State cards: string[] = [];
-  @State revealed: boolean[] = [];
-  @State matched: boolean[] = [];
-  @State first: number = -1;
-  @State moves: number = 0;
-  @State pairs: number = 0;
-  @State playing: boolean = false;
-  @State won: boolean = false;
-  private emojis: string[] = ['🍎', '🍊', '🍋', '🍇', '🍉', '🍒', '🥝', '🍑'];
-  private total: number = 8;
-  @StorageProp('high_memory') highScore: number = 0;
+export struct ReactionTest {
+  @State phase: string = 'idle'; // idle|wait|ready|result
+  @State msg: string = '点击屏幕开始';
+  @State reaction: number = 0;
+  @State best: number = 9999;
+  private timer: number = -1;
+  @StorageProp('high_reaction') highScore: number = 9999;
   onBack?: () => void;
 
   start(): void {
-    let deck: string[] = [];
-    for (let e of this.emojis) {
-      deck.push(e);
-      deck.push(e);
-    }
-    for (let i = deck.length - 1; i > 0; i--) {
-      let j = Math.floor(Math.random() * (i + 1));
-      let t = deck[i];
-      deck[i] = deck[j];
-      deck[j] = t;
-    }
-    this.cards = deck;
-    this.revealed = [];
-    this.matched = [];
-    for (let k = 0; k < 16; k++) {
-      this.revealed.push(false);
-      this.matched.push(false);
-    }
-    this.first = -1;
-    this.moves = 0;
-    this.pairs = 0;
-    this.playing = true;
-    this.won = false;
+    this.phase = 'wait';
+    this.msg = '等待中…';
+    let wait = 1000 + Math.random() * 3000;
+    setTimeout(() => {
+      if (this.phase === 'wait') {
+        this.phase = 'ready';
+        this.msg = '快按！！！';
+        this.timer = Date.now();
+      }
+    }, wait);
   }
 
-  flip(i: number): void {
-    if (!this.playing || this.revealed[i] || this.matched[i]) {
-      return;
-    }
-    this.revealed[i] = true;
-    this.revealed = [...this.revealed];
-    if (this.first === -1) {
-      this.first = i;
-      return;
-    }
-    this.moves++;
-    if (this.cards[i] === this.cards[this.first]) {
-      this.matched[i] = true;
-      this.matched[this.first] = true;
-      this.matched = [...this.matched];
-      this.pairs++;
-      this.first = -1;
-      if (this.pairs >= this.total) {
-        this.playing = false;
-        this.won = true;
-        let bonus = Math.max(0, 200 - this.moves * 5);
-        if (bonus > this.highScore) {
-          AppStorage.setOrCreate<number>('high_memory', bonus);
-          this.highScore = bonus;
-        }
+  onTap(): void {
+    if (this.phase === 'idle') {
+      this.start();
+    } else if (this.phase === 'wait') {
+      this.msg = '太急了！等变绿再按';
+      this.phase = 'idle';
+    } else if (this.phase === 'ready') {
+      this.reaction = Date.now() - this.timer;
+      if (this.reaction < this.best) { this.best = this.reaction; }
+      if (this.best < this.highScore) {
+        AppStorage.setOrCreate<number>('high_reaction', this.best);
+        this.highScore = this.best;
       }
-    } else {
-      let prev = this.first;
-      this.first = -1;
-      setTimeout(() => {
-        this.revealed[i] = false;
-        this.revealed[prev] = false;
-        this.revealed = [...this.revealed];
-      }, 600);
+      this.phase = 'result';
+      this.msg = '你的反应：' + this.reaction.toString() + 'ms';
+    } else if (this.phase === 'result') {
+      this.start();
     }
   }
 
   build() {
-    Column() {
-      Row() {
-        Text('←').fontSize(24).onClick(() => {
-          if (this.onBack) { this.onBack(); }
-        })
-        Blank()
-        Text('🃏 记忆翻牌').fontSize(18).fontWeight(FontWeight.Bold)
-        Blank()
-        Text('←').fontSize(24).fontColor(Color.Transparent)
-      }
-      .width('100%').padding(14)
-
-      Row() {
-        Text('步数：' + this.moves.toString()).fontSize(14).fontWeight(FontWeight.Bold)
-        Blank()
-        Text('🏆' + this.highScore.toString()).fontSize(13).fontColor('#F0A500')
-      }
-      .width('88%').margin({ bottom: 12 })
-
-      Grid() {
-        ForEach(this.cards, (c: string, i: number) => {
-          GridItem() {
-            Column() {
-              Text(this.revealed[i] || this.matched[i] ? c : '❓').fontSize(32)
-            }
-            .width('100%').height(68)
-            .backgroundColor(this.matched[i] ? '#E8F5E9' : (this.revealed[i] ? '#FFF9C4' : '#F0E6F6'))
-            .borderRadius(10).justifyContent(FlexAlign.Center)
-            .onClick(() => { this.flip(i); })
-          }
-        }, (c: string, i: number) => i.toString())
-      }
-      .columnsTemplate('1fr 1fr 1fr 1fr').columnsGap(8).rowsGap(8).width('92%')
-
-      Blank()
-
-      if (!this.playing && !this.won) {
-        Button('开始游戏').fontSize(18).fontColor(Color.White)
-          .backgroundColor('#BB8FCE').borderRadius(24).width('60%').height(48)
-          .onClick(() => { this.start(); })
-          .margin({ bottom: 60 })
-      }
-      if (this.won) {
-        Column() {
-          Text('🎉 全部找到！').fontSize(20).fontWeight(FontWeight.Bold)
-          Text('用了' + this.moves.toString() + '步').fontSize(16).fontColor('#BB8FCE').margin({ top: 4 })
-          Text('得分：' + (Math.max(0, 200 - this.moves * 5)).toString()).fontSize(14).fontColor('#F0A500')
-          Button('再来一局').fontSize(16).fontColor(Color.White)
-            .backgroundColor('#BB8FCE').borderRadius(20).width('50%').height(40).margin({ top: 12 })
-            .onClick(() => { this.start(); })
+    Stack() {
+      Column() {
+        Row() {
+          Text('←').fontSize(24).onClick(() => { if (this.onBack) { this.onBack(); } })
+          Blank()
+          Text('⚡ 反应测试').fontSize(18).fontWeight(FontWeight.Bold)
+          Blank()
+          Text('←').fontSize(24).fontColor(Color.Transparent)
         }
-        .margin({ bottom: 50 })
+        .width('100%').padding(14)
+
+        Blank()
+
+        Text(this.phase === 'result' ? '⏱' : '').fontSize(64)
+        Text(this.msg).fontSize(22).fontWeight(FontWeight.Bold)
+          .fontColor(this.phase === 'ready' ? '#FF6B6B' : '#333').margin({ top: 16 })
+
+        if (this.phase === 'result') {
+          Text('最佳：' + this.best.toString() + 'ms').fontSize(16).fontColor('#07C160').margin({ top: 12 })
+          Text('历史最佳：' + (this.highScore < 9999 ? this.highScore.toString() : '--') + 'ms').fontSize(13).fontColor('#F0A500').margin({ top: 4 })
+          Text('点击再来一次').fontSize(13).fontColor('#999').margin({ top: 16 })
+        }
+        if (this.phase === 'idle') {
+          Text('点击任意位置开始').fontSize(14).fontColor('#999').margin({ top: 12 })
+        }
+
+        Blank()
       }
+      .width('100%').height('100%')
+      .onClick(() => { this.onTap(); })
     }
-    .width('100%').height('100%').backgroundColor('#FEFAFE')
+    .width('100%').height('100%')
+    .backgroundColor(this.phase === 'ready' ? '#E8F5E9' : (this.phase === 'result' ? '#FAFAFA' : '#FAFAFA'))
   }
 }
 
