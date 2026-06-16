@@ -169,16 +169,21 @@ struct MainPage {
 
                 // 迷你打卡
                 Row() {
-                  Text(this.userStreak > 0 ? '🔥' : '🕯️')
+                  Text(this.checkedInToday ? '🔥' : '🕯️')
                     .fontSize(16)
+                  Text(this.checkedInToday ? '已打卡' : '打卡')
+                    .fontSize(11)
+                    .fontColor(this.checkedInToday ? '#AAA' : '#E67E22')
+                    .margin({ left: 2 })
                   Text(this.userStreak.toString())
                     .fontSize(14)
                     .fontWeight(FontWeight.Bold)
                     .fontColor(this.checkedInToday ? '#CCC' : '#E67E22')
-                    .margin({ left: 2 })
+                    .margin({ left: 6 })
                   Text('天')
                     .fontSize(11)
                     .fontColor('#999')
+                    .margin({ left: 1 })
                 }
                 .padding({ left: 10, right: 10, top: 4, bottom: 4 })
                 .backgroundColor(Color.White)
