@@ -298,11 +298,11 @@ export struct SnakeGame {
         ForEach(this.rowIds, (r: string, ri: number) => {
           Row() {
             ForEach(this.colIds, (c: string, ci: number) => {
-              let isSnake: boolean = this.isOnSnake(ri, ci);
-              let isFood: boolean = this.food[0] === ri && this.food[1] === ci;
-              let isHead: boolean = this.snake.length > 0 && this.snake[0][0] === ri && this.snake[0][1] === ci;
-              Text(isHead ? '🟢' : (isSnake ? '🟩' : (isFood ? '🍎' : '·')))
-                .fontSize(isHead || isFood ? 14 : 8)
+              Text(this.snake.length > 0 && this.snake[0][0] === ri && this.snake[0][1] === ci ? '🟢' :
+                   (this.isOnSnake(ri, ci) ? '🟩' :
+                   (this.food[0] === ri && this.food[1] === ci ? '🍎' : '·')))
+                .fontSize((this.snake.length > 0 && this.snake[0][0] === ri && this.snake[0][1] === ci) ||
+                          (this.food[0] === ri && this.food[1] === ci) ? 14 : 8)
                 .width(20).height(20)
                 .textAlign(TextAlign.Center)
             }, (c: string, ci: number) => c)
