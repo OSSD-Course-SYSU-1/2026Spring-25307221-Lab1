@@ -166,19 +166,27 @@ function getTreeHoleResponsePosts(treeHoleContent: string): MoodPostEntry[] {
  */
 export function generateAIFeed(userMood: string, treeHolePosts: TreeHolePost[]): CommunityPost[] {
   let moods: MoodPostEntry[] = getMoodPosts(userMood || '😊');
+  // 随机打乱帖子顺序
+  for (let i = moods.length - 1; i > 0; i--) {
+    let j = Math.floor(Math.random() * (i + 1));
+    let t = moods[i];
+    moods[i] = moods[j];
+    moods[j] = t;
+  }
   let posts: CommunityPost[] = [];
+  let times: string[] = ['刚刚', '3分钟前', '7分钟前', '12分钟前', '18分钟前', '25分钟前', '34分钟前', '45分钟前', '1小时前', '2小时前'];
 
   for (let i = 0; i < moods.length; i++) {
     let m: MoodPostEntry = moods[i];
     let cp: CommunityPost = {
-      id: 'mp' + i.toString(),
+      id: 'mp' + i.toString() + '_' + Date.now().toString(),
       userName: m.friend.name,
       userAvatar: m.friend.emoji,
       content: m.content,
-      likeCount: Math.floor(Math.random() * 300) + 20,
-      commentCount: Math.floor(Math.random() * 40) + 3,
-      timeAgo: (i * 12 + 3).toString() + '分钟前',
-      isLiked: i === 0
+      likeCount: Math.floor(Math.random() * 400) + 15,
+      commentCount: Math.floor(Math.random() * 50) + 2,
+      timeAgo: times[Math.floor(Math.random() * times.length)],
+      isLiked: Math.random() > 0.7
     };
     posts.push(cp);
   }
@@ -190,37 +198,26 @@ export function generateAIFeed(userMood: string, treeHolePosts: TreeHolePost[]):
     for (let i = 0; i < responses.length; i++) {
       let r: MoodPostEntry = responses[i];
       let thr: CommunityPost = {
-        id: 'thr' + i.toString(),
+        id: 'thr' + i.toString() + '_' + Date.now().toString(),
         userName: r.friend.name,
         userAvatar: r.friend.emoji,
         content: r.content,
-        likeCount: Math.floor(Math.random() * 200) + 10,
-        commentCount: Math.floor(Math.random() * 20) + 1,
-        timeAgo: (i * 25 + 8).toString() + '分钟前',
+        likeCount: Math.floor(Math.random() * 250) + 8,
+        commentCount: Math.floor(Math.random() * 25) + 1,
+        timeAgo: times[Math.floor(Math.random() * times.length)],
         isLiked: false
       };
       treeHoleResponses.push(thr);
     }
   }
 
-  let allPosts: CommunityPost[] = [];
-  let ti: number = 0;
-  let mi: number = 0;
-  if (posts.length > 0) {
-    allPosts.push(posts[mi]);
-    mi++;
-  }
-  if (posts.length > 1) {
-    allPosts.push(posts[mi]);
-    mi++;
-  }
-  while (ti < treeHoleResponses.length) {
-    allPosts.push(treeHoleResponses[ti]);
-    ti++;
-  }
-  while (mi < posts.length) {
-    allPosts.push(posts[mi]);
-    mi++;
+  // 混合后随机打乱
+  let allPosts: CommunityPost[] = posts.concat(treeHoleResponses);
+  for (let i = allPosts.length - 1; i > 0; i--) {
+    let j = Math.floor(Math.random() * (i + 1));
+    let t = allPosts[i];
+    allPosts[i] = allPosts[j];
+    allPosts[j] = t;
   }
 
   return allPosts;

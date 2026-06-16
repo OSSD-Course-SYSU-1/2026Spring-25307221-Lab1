@@ -32,7 +32,7 @@ export struct GameMenu {
       Text(d).fontSize(11).fontColor('#999').margin({ top: 2 })
     }
     .width('100%').padding({ top: 18, bottom: 18 })
-    .backgroundColor(c + '22').borderRadius(16).border({ width: 1, color: c + '44' })
+    .backgroundColor(c + '40').borderRadius(16).border({ width: 1.5, color: c })
     .alignItems(HorizontalAlign.Center)
     .onClick(() => {
       if (this.onPlay) {

@@ -53,36 +53,7 @@ struct MainPage {
 
       Column() {
         Tabs({ index: this.currentIndex }) {
-          // ==================== Tab 1: 游戏 ====================
-          TabContent() {
-            Stack() {
-              if (this.currentGame === '') {
-                Column() {
-                  GameMenu({
-                    onPlay: (gameId: string) => { this.currentGame = gameId; }
-                  })
-                }
-                .width('100%').height('100%').backgroundColor('#FAFAFA')
-              } else if (this.currentGame === '打地鼠') {
-                WhackAMole({ onBack: () => { this.currentGame = ''; } })
-              } else if (this.currentGame === '贪吃蛇') {
-                SnakeGame({ onBack: () => { this.currentGame = ''; } })
-              } else if (this.currentGame === '老虎机') {
-                SlotMachine({ onBack: () => { this.currentGame = ''; } })
-              } else if (this.currentGame === '记忆翻牌') {
-                MemoryMatch({ onBack: () => { this.currentGame = ''; } })
-              } else if (this.currentGame === '乒乓球') {
-                PongGame({ onBack: () => { this.currentGame = ''; } })
-              } else if (this.currentGame === '俄罗斯方块') {
-                TetrisGame({ onBack: () => { this.currentGame = ''; } })
-              }
-            }
-            .width('100%').height('100%')
-          }
-          .tabBar(this.TabBuilder('游戏', 0, '🎮'))
-          .align(Alignment.Top)
-
-          // ==================== Tab 2: AI广场 ====================
+          // ==================== Tab 0: AI广场 ====================
           TabContent() {
             Column() {
               Column() {
@@ -115,7 +86,7 @@ struct MainPage {
             .width('100%')
             .height('100%')
           }
-          .tabBar(this.TabBuilder('AI广场', 1, '🤖'))
+          .tabBar(this.TabBuilder('AI广场', 0, '🤖'))
           .align(Alignment.Top)
 
           // ==================== Tab 3: 工具箱 ====================
@@ -145,7 +116,7 @@ struct MainPage {
             .width('100%')
             .height('100%')
           }
-          .tabBar(this.TabBuilder('工具箱', 2, '🧰'))
+          .tabBar(this.TabBuilder('工具箱', 1, '🧰'))
           .align(Alignment.Top)
 
           // ==================== Tab 4: 社区 ====================
@@ -336,10 +307,39 @@ struct MainPage {
             .height('100%')
             .backgroundColor('#F0F0F0')
           }
-          .tabBar(this.TabBuilder('社区', 3, '🌐'))
+          .tabBar(this.TabBuilder('社区', 2, '🌐'))
           .align(Alignment.Top)
 
-          // ==================== Tab 5: 我的 ====================
+          // ==================== Tab 3: 游戏 ====================
+          TabContent() {
+            Stack() {
+              if (this.currentGame === '') {
+                Column() {
+                  GameMenu({
+                    onPlay: (gameId: string) => { this.currentGame = gameId; }
+                  })
+                }
+                .width('100%').height('100%').backgroundColor('#FAFAFA')
+              } else if (this.currentGame === '打地鼠') {
+                WhackAMole({ onBack: () => { this.currentGame = ''; } })
+              } else if (this.currentGame === '贪吃蛇') {
+                SnakeGame({ onBack: () => { this.currentGame = ''; } })
+              } else if (this.currentGame === '老虎机') {
+                SlotMachine({ onBack: () => { this.currentGame = ''; } })
+              } else if (this.currentGame === '记忆翻牌') {
+                MemoryMatch({ onBack: () => { this.currentGame = ''; } })
+              } else if (this.currentGame === '乒乓球') {
+                PongGame({ onBack: () => { this.currentGame = ''; } })
+              } else if (this.currentGame === '俄罗斯方块') {
+                TetrisGame({ onBack: () => { this.currentGame = ''; } })
+              }
+            }
+            .width('100%').height('100%')
+          }
+          .tabBar(this.TabBuilder('游戏', 3, '🎮'))
+          .align(Alignment.Top)
+
+          // ==================== Tab 4: 我的 ====================
           TabContent() {
             Column() {
               Row() {
@@ -408,6 +408,9 @@ struct MainPage {
         .barHeight(56)
         .onChange((index: number) => {
           this.currentIndex = index;
+          if (index === 2) {
+            this.refreshFeed();
+          }
         })
       }
       .width('100%')
