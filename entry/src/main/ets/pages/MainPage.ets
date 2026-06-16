@@ -1,12 +1,10 @@
-import { allContacts, recentContacts, Contact } from '../model/ContactModel';
 import router from '@ohos.router';
 import { aiCharacters, AICharacter } from '../model/AICharacterData'
 import { aiTools, AITool } from '../model/ToolData'
-import { CommunityPost, Comment, moodOptions, MoodRecord, TreeHolePost, generateAIFeed, aiFriends, AIFriend } from '../model/CommunityData'
+import { CommunityPost, Comment, moodOptions, MoodRecord, TreeHolePost, generateAIFeed } from '../model/CommunityData'
 import { BreakpointType, getBreakpoint } from './common/BreakpointSystem';
 import { window } from '@kit.ArkUI';
 import { promptAction } from '@kit.ArkUI';
-import { GameMenu, WhackAMole, SnakeGame, SlotMachine, MemoryMatch, PongGame, TetrisGame } from './components/MiniGameView';
 
 @Entry
 @Component
@@ -26,8 +24,6 @@ struct MainPage {
   @State showMoodPicker: boolean = false;
   @State showTreeHoleInput: boolean = false;
   @State treeHoleDraft: string = '';
-  // 游戏状态
-  @State currentGame: string = '';
   // 个人中心
   @State userNickname: string = 'HarmonyChat用户';
   @State editingNickname: boolean = false;
@@ -336,36 +332,7 @@ struct MainPage {
           .tabBar(this.TabBuilder('社区', 2, '🌐'))
           .align(Alignment.Top)
 
-          // ==================== Tab 3: 游戏 ====================
-          TabContent() {
-            Stack() {
-              if (this.currentGame === '') {
-                Column() {
-                  GameMenu({
-                    onPlay: (gameId: string) => { this.currentGame = gameId; }
-                  })
-                }
-                .width('100%').height('100%').backgroundColor('#FAFAFA')
-              } else if (this.currentGame === '打地鼠') {
-                WhackAMole({ onBack: () => { this.currentGame = ''; } })
-              } else if (this.currentGame === '贪吃蛇') {
-                SnakeGame({ onBack: () => { this.currentGame = ''; } })
-              } else if (this.currentGame === '老虎机') {
-                SlotMachine({ onBack: () => { this.currentGame = ''; } })
-              } else if (this.currentGame === '记忆翻牌') {
-                MemoryMatch({ onBack: () => { this.currentGame = ''; } })
-              } else if (this.currentGame === '乒乓球') {
-                PongGame({ onBack: () => { this.currentGame = ''; } })
-              } else if (this.currentGame === '俄罗斯方块') {
-                TetrisGame({ onBack: () => { this.currentGame = ''; } })
-              }
-            }
-            .width('100%').height('100%')
-          }
-          .tabBar(this.TabBuilder('游戏', 3, '🎮'))
-          .align(Alignment.Top)
-
-          // ==================== Tab 4: 我的 ====================
+          // ==================== Tab 3: 我的 ====================
           TabContent() {
             Column() {
               Row() {
@@ -461,7 +428,7 @@ struct MainPage {
             .height('100%')
             .backgroundColor('#F5F5F5')
           }
-          .tabBar(this.TabBuilder('我的', 4, '👤'))
+          .tabBar(this.TabBuilder('我的', 3, '👤'))
           .align(Alignment.Top)
         }
         .layoutWeight(1)
@@ -546,67 +513,6 @@ struct MainPage {
     .height(56)
     .padding({ left: 16, right: 16 })
     .backgroundColor(Color.White)
-  }
-
-  // AI朋友条目（消息Tab）
-  @Builder friendItem(friend: AIFriend) {
-    Row() {
-      Text(friend.emoji)
-        .fontSize(36)
-      Column() {
-        Text(friend.name)
-          .fontSize(17)
-          .fontWeight(FontWeight.Bold)
-        Text(friend.personality)
-          .fontSize(13)
-          .fontColor('#888')
-          .maxLines(1)
-          .textOverflow({ overflow: TextOverflow.Ellipsis })
-      }
-      .alignItems(HorizontalAlign.Start)
-      .layoutWeight(1)
-      .margin({ left: 12 })
-    }
-    .width('100%')
-    .padding({ top: 12, bottom: 12, left: 14, right: 14 })
-    .backgroundColor(Color.White)
-    .onClick(() => {
-      router.pushUrl({
-        url: 'pages/ChatPage',
-        params: {
-          contactId: 'friend_' + friend.name,
-          contactName: friend.name,
-          greeting: friend.chatGreeting,
-          isAI: true,
-          customPrompt: friend.chatPrompt
-        }
-      });
-    })
-  }
-
-  // 联系人条目
-  @Builder contactItem(contact: Contact) {
-    Row() {
-      Image(contact.avatar)
-        .width(48).height(48)
-        .borderRadius(24)
-        .margin(10)
-      Text(contact.name)
-        .fontSize(18)
-        .margin(10)
-    }
-    .width('100%')
-    .padding(5)
-    .onClick(() => {
-      router.pushUrl({
-        url: 'pages/ChatPage',
-        params: {
-          contactId: contact.id,
-          contactName: contact.name,
-          isAI: false
-        }
-      });
-    })
   }
 
   // AI角色卡片

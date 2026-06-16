@@ -13,7 +13,7 @@ export struct GameMenu {
       Text('学习累了，来放松一下吧').fontSize(13).fontColor('#999').margin({ bottom: 20 })
 
       Grid() {
-        GridItem() { this.Card('🎯', '打地鼠', '30秒眼疾手快', '#FF6B6B') }
+        GridItem() { this.Card('🎯', '猜数字', '1-100猜中即赢', '#FF6B6B') }
         GridItem() { this.Card('🐍', '贪吃蛇', '经典重现', '#4ECDC4') }
         GridItem() { this.Card('🧱', '俄罗斯方块', '消除得分', '#45B7D1') }
         GridItem() { this.Card('🏓', '乒乓球', '对战胜AI', '#F7DC6F') }
@@ -100,141 +100,98 @@ export struct GameIntro {
   }
 }
 
-// ==================== 打地鼠 ====================
+// ==================== 猜数字 ====================
 @Component
-export struct WhackAMole {
-  @State holes: boolean[] = [false, false, false, false, false, false, false, false, false];
-  @State score: number = 0;
-  @State timeLeft: number = 30;
+export struct GuessNumber {
+  @State target: number = 0;
+  @State guess: string = '';
+  @State hint: string = '输入1-100的数字';
+  @State tries: number = 0;
+  @State won: boolean = false;
   @State playing: boolean = false;
-  @State gameOver: boolean = false;
-  private moleTimer: number = -1;
-  private cdTimer: number = -1;
-  @StorageProp('high_whack') highScore: number = 0;
+  @StorageProp('high_guess') highScore: number = 999;
   onBack?: () => void;
 
   start(): void {
-    this.score = 0;
-    this.timeLeft = 30;
+    this.target = Math.floor(Math.random() * 100) + 1;
+    this.tries = 0;
+    this.won = false;
     this.playing = true;
-    this.gameOver = false;
-    this.holes = [false, false, false, false, false, false, false, false, false];
-    this.cdTimer = setInterval(() => {
-      this.timeLeft--;
-      if (this.timeLeft <= 0) {
-        this.stop();
-      }
-    }, 1000);
-    this.pop();
+    this.guess = '';
+    this.hint = '输入1-100的数字';
   }
 
-  stop(): void {
-    this.playing = false;
-    this.gameOver = true;
-    clearInterval(this.moleTimer);
-    clearInterval(this.cdTimer);
-    this.holes = [false, false, false, false, false, false, false, false, false];
-    if (this.score > this.highScore) {
-      AppStorage.setOrCreate<number>('high_whack', this.score);
-      this.highScore = this.score;
-    }
-  }
-
-  pop(): void {
-    if (!this.playing) {
+  check(): void {
+    let n = parseInt(this.guess);
+    if (isNaN(n) || n < 1 || n > 100) {
+      this.hint = '请输入1-100的数字！';
       return;
     }
-    let i = Math.floor(Math.random() * 9);
-    this.holes[i] = true;
-    this.holes = [...this.holes];
-    this.moleTimer = setTimeout(() => {
-      this.holes[i] = false;
-      this.holes = [...this.holes];
-      if (this.playing) {
-        setTimeout(() => {
-          this.pop();
-        }, 300 + Math.random() * 600);
+    this.tries++;
+    if (n === this.target) {
+      this.won = true;
+      this.playing = false;
+      this.hint = '🎉 猜对了！就是' + this.target.toString();
+      if (this.tries < this.highScore) {
+        AppStorage.setOrCreate<number>('high_guess', this.tries);
+        this.highScore = this.tries;
       }
-    }, 600 + Math.random() * 400);
-  }
-
-  hit(i: number): void {
-    if (!this.playing || !this.holes[i]) {
-      return;
+    } else if (n < this.target) {
+      this.hint = '📈 太小了，往大猜！';
+    } else {
+      this.hint = '📉 太大了，往小猜！';
     }
-    this.holes[i] = false;
-    this.holes = [...this.holes];
-    this.score++;
-  }
-
-  aboutToDisappear(): void {
-    clearInterval(this.moleTimer);
-    clearInterval(this.cdTimer);
+    this.guess = '';
   }
 
   build() {
     Column() {
       Row() {
-        Text('←').fontSize(24).onClick(() => {
-          this.stop();
-          if (this.onBack) {
-            this.onBack();
-          }
-        })
+        Text('←').fontSize(24).onClick(() => { if (this.onBack) { this.onBack(); } })
         Blank()
-        Text('🎯 打地鼠').fontSize(18).fontWeight(FontWeight.Bold)
+        Text('🎯 猜数字').fontSize(18).fontWeight(FontWeight.Bold)
         Blank()
         Text('←').fontSize(24).fontColor(Color.Transparent)
       }
       .width('100%').padding(14)
 
-      Row() {
-        Text('得分：' + this.score.toString()).fontSize(16).fontWeight(FontWeight.Bold)
-        Blank()
-        Text('🏆' + this.highScore.toString()).fontSize(13).fontColor('#F0A500')
-        Blank()
-        Text('⏱' + this.timeLeft.toString() + 's').fontSize(16)
-          .fontColor(this.timeLeft <= 5 ? '#F44' : '#333')
-      }
-      .width('88%').margin({ bottom: 20 })
+      Text('我想了一个1-100的数字').fontSize(16).margin({ top: 8 })
+      Text(this.won ? '✅' : '🤔').fontSize(60).margin({ top: 12, bottom: 12 })
 
-      Grid() {
-        ForEach(['0', '1', '2', '3', '4', '5', '6', '7', '8'], (id: string, idx: number) => {
-          GridItem() {
-            Column() {
-              Text(this.holes[idx] ? '🐹' : '🕳️')
-                .fontSize(44)
-                .opacity(this.holes[idx] ? 1 : 0.3)
-            }
-            .width('100%').height(90)
-            .backgroundColor(this.holes[idx] ? '#FFF3CD' : '#F5F5F5')
-            .borderRadius(12).justifyContent(FlexAlign.Center)
-            .onClick(() => { this.hit(idx); })
-          }
-        }, (id: string) => id)
+      Text(this.hint).fontSize(20).fontWeight(FontWeight.Bold)
+        .fontColor(this.won ? '#07C160' : '#FF6B6B').margin({ bottom: 8 })
+
+      if (this.playing || this.won) {
+        Text('已猜' + this.tries.toString() + '次').fontSize(14).fontColor('#999').margin({ bottom: 4 })
       }
-      .columnsTemplate('1fr 1fr 1fr').columnsGap(10).rowsGap(10).width('88%')
+      Text('最少步数：' + (this.highScore < 999 ? this.highScore.toString() : '--')).fontSize(13).fontColor('#F0A500')
+
+      if (this.playing) {
+        Row() {
+          TextInput({ text: this.guess, placeholder: '输入数字' })
+            .fontSize(28).width(120).height(60).type(InputType.Number).maxLength(3)
+            .backgroundColor('#FFF3F3').borderRadius(12).textAlign(TextAlign.Center)
+            .onChange((v: string) => { this.guess = v; })
+          Button('猜！').fontSize(18).fontColor(Color.White)
+            .backgroundColor('#FF6B6B').borderRadius(12).height(60).margin({ left: 12 })
+            .padding({ left: 20, right: 20 })
+            .onClick(() => { this.check(); })
+        }
+        .margin({ top: 20 })
+      }
 
       Blank()
 
-      if (!this.playing && !this.gameOver) {
+      if (!this.playing && !this.won) {
         Button('开始游戏').fontSize(18).fontColor(Color.White)
           .backgroundColor('#FF6B6B').borderRadius(24).width('60%').height(48)
-          .onClick(() => { this.start(); })
-          .margin({ bottom: 60 })
+          .onClick(() => { this.start(); }).margin({ bottom: 60 })
       }
-      if (this.gameOver) {
-        Column() {
-          Text('游戏结束！').fontSize(20).fontWeight(FontWeight.Bold)
-          Text('得分：' + this.score.toString()).fontSize(16).fontColor('#FF6B6B').margin({ top: 4 })
-          if (this.score >= this.highScore) {
-            Text('🎉 新纪录！').fontSize(14).fontColor('#F0A500')
-          }
-          Button('再来一局').fontSize(16).fontColor(Color.White)
-            .backgroundColor('#FF6B6B').borderRadius(20).width('50%').height(40).margin({ top: 12 })
-            .onClick(() => { this.start(); })
-        }
-        .margin({ bottom: 50 })
+      if (this.won) {
+        Text('🏆 你用了' + this.tries.toString() + '步猜中！').fontSize(18).fontWeight(FontWeight.Bold)
+        Button('再来一局').fontSize(16).fontColor(Color.White)
+          .backgroundColor('#FF6B6B').borderRadius(20).width('50%').height(40).margin({ top: 12 })
+          .onClick(() => { this.start(); })
       }
     }
     .width('100%').height('100%').backgroundColor('#FFFAFA')
