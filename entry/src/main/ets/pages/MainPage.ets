@@ -6,7 +6,7 @@ import { CommunityPost, moodOptions, MoodRecord, TreeHolePost, generateAIFeed, a
 import { BreakpointType, getBreakpoint } from './common/BreakpointSystem';
 import { window } from '@kit.ArkUI';
 import { promptAction } from '@kit.ArkUI';
-import { GameMenu, GameIntro, WhackAMole, SnakeGame, SlotMachine, MemoryMatch, PongGame, TetrisGame } from './components/MiniGameView';
+import { GameMenu, WhackAMole, SnakeGame, SlotMachine, MemoryMatch, PongGame, TetrisGame } from './components/MiniGameView';
 
 @Entry
 @Component
@@ -27,9 +27,7 @@ struct MainPage {
   @State showTreeHoleInput: boolean = false;
   @State treeHoleDraft: string = '';
   // 游戏状态
-  @State currentGame: string = '';  // '' | game name
-  @State gamePhase: string = '';    // '' | 'intro' | 'play'
-  @State selectedGame: string = '';
+  @State currentGame: string = '';
   private todayStr: string = new Date().getFullYear().toString() + '-' +
     ((new Date().getMonth() + 1).toString().padStart(2, '0')) + '-' +
     (new Date().getDate().toString().padStart(2, '0'));
@@ -61,16 +59,10 @@ struct MainPage {
               if (this.currentGame === '') {
                 Column() {
                   GameMenu({
-                    onPlay: (gameId: string) => { this.selectedGame = gameId; this.currentGame = 'intro'; }
+                    onPlay: (gameId: string) => { this.currentGame = gameId; }
                   })
                 }
                 .width('100%').height('100%').backgroundColor('#FAFAFA')
-              } else if (this.currentGame === 'intro') {
-                GameIntro({
-                  gameName: this.selectedGame,
-                  onStart: () => { this.currentGame = this.selectedGame; },
-                  onBack: () => { this.currentGame = ''; }
-                })
               } else if (this.currentGame === '打地鼠') {
                 WhackAMole({ onBack: () => { this.currentGame = ''; } })
               } else if (this.currentGame === '贪吃蛇') {
