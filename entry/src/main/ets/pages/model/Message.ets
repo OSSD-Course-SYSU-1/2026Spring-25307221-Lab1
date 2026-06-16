@@ -64,11 +64,18 @@ export default class Message {
 
   /** 是否"我"发出的消息 */
   static isOutgoing(senderId: string): boolean {
-    if (senderId && senderId == (ClientCoreSDK.getInstance().currentLoginInfo?.loginUserId)) {
+    let loginUid = ClientCoreSDK.getInstance().currentLoginInfo?.loginUserId;
+    if (senderId && loginUid && senderId === loginUid) {
       return true;
-    } else {
-      return false;
     }
+    // 未登录IM时（跳过登录模式），本地用户ID由 ChatPage 设为 'me'
+    if (senderId && !loginUid) {
+      let localId = ToolKits.getLocalUserUid() || 'me';
+      if (senderId === localId) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
