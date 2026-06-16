@@ -932,7 +932,7 @@ export struct TetrisGame {
     }
   }
 
-  rotate(): void {
+  rotPiece(): void {
     let rot: number[][] = [];
     for (let c = 0; c < this.piece[0].length; c++) {
       let nr: number[] = [];
@@ -1078,7 +1078,7 @@ export struct TetrisGame {
         if (action === 'L') { this.moveLeft(); }
         if (action === 'R') { this.moveRight(); }
         if (action === 'D') { this.down(); }
-        if (action === 'ROT') { this.rotate(); }
+        if (action === 'ROT') { this.rotPiece(); }
         if (action === 'DROP') { this.drop(); }
       })
   }
