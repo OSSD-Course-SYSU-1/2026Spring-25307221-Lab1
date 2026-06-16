@@ -22,6 +22,7 @@
         "startWindowIcon": "$media:ic_splash_graybg2",
         "startWindowBackground": "$color:start_window_background",
         "exported": true,
+        "continuable": true,
         "orientation":"portrait",
         "skills": [
           {

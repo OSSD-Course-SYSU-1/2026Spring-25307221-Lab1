@@ -16,55 +16,74 @@ import { ClientCoreSDK } from "mobileimsdk";
 const TAG: string = '[EntryAbility] '
 
 /**
- * 入口Ability实现类。
- *
- * @author Jack Jiang(http://www.52im.net/thread-2792-1-1.html)
+ * 入口Ability — 支持二次流转（跨设备迁移）。
  */
 export default class EntryAbility extends UIAbility {
+  private currentPage: string = 'pages/SplashPage';
+
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
     ClientCoreSDK.Log.debug(TAG+ 'Ability onCreate');
-
-    // init MobileIMSDK first
-    // 提示：在不退出APP的情况下退出登陆后再重新登陆时，请确保调用本方法一次，不然会报code=203错误哦！
     IMClientManager.getInstance().initMobileIMSDK(this.context.getApplicationContext(), this.context.eventHub);
+
+    // 从流转恢复
+    if (launchParam.launchReason === AbilityConstant.LaunchReason.CONTINUATION) {
+      ClientCoreSDK.Log.info(TAG+ '从其他设备流转恢复');
+      let savedPage = want.parameters?.['currentPage'] as string;
+      if (savedPage) {
+        this.currentPage = savedPage;
+      }
+    }
   }
 
   onDestroy(): void {
     ClientCoreSDK.Log.debug(TAG+ 'Ability onDestroy');
-
-    // 释放IM核心占用的资源
     IMClientManager.getInstance().releaseMobileIMSDK();
   }
 
-  onWindowStageCreate(windowStage: window.WindowStage): void {
-    // Main window is created, set main page for this ability
-    ClientCoreSDK.Log.debug(TAG+ 'Ability onWindowStageCreate');
+  /**
+   * 二次流转：设备A → 设备B，保存当前状态。
+   */
+  onContinue(wantParam: Record<string, Object>): AbilityConstant.OnContinueResult {
+    ClientCoreSDK.Log.info(TAG+ 'onContinue — 保存状态迁移到新设备');
+    wantParam['currentPage'] = this.currentPage;
+    wantParam['timestamp'] = Date.now().toString();
+    return AbilityConstant.OnContinueResult.AGREE;
+  }
 
+  onNewWant(want: Want, launchParam: AbilityConstant.LaunchParam): void {
+    ClientCoreSDK.Log.debug(TAG+ 'onNewWant');
+    if (launchParam.launchReason === AbilityConstant.LaunchReason.CONTINUATION) {
+      let savedPage = want.parameters?.['currentPage'] as string;
+      if (savedPage) {
+        this.currentPage = savedPage;
+      }
+    }
+  }
+
+  onWindowStageCreate(windowStage: window.WindowStage): void {
+    ClientCoreSDK.Log.debug(TAG+ 'Ability onWindowStageCreate');
     AppStorage.setOrCreate<window.WindowStage>('windowStage', windowStage);
-    AppStorage.setOrCreate<window.Window>('window', windowStage.getMainWindowSync());// 获取应用主窗口
+    AppStorage.setOrCreate<window.Window>('window', windowStage.getMainWindowSync());
     AppStorage.setOrCreate<common.UIAbilityContext>('uiAbilityContext', this.context);
 
-    windowStage.loadContent('pages/SplashPage', (err) => {
+    windowStage.loadContent(this.currentPage, (err) => {
       if (err.code) {
-        ClientCoreSDK.Log.error(TAG+ 'Failed to load the content. Cause: %{public}s'+ (JSON.stringify(err) ?? ''));
+        ClientCoreSDK.Log.error(TAG+ 'Failed to load content: '+ (JSON.stringify(err) ?? ''));
         return;
       }
-      ClientCoreSDK.Log.debug(TAG+ 'Succeeded in loading the content.');
+      ClientCoreSDK.Log.debug(TAG+ 'Succeeded in loading content.');
     });
   }
 
   onWindowStageDestroy(): void {
-    // Main window is destroyed, release UI related resources
     ClientCoreSDK.Log.debug(TAG+ 'Ability onWindowStageDestroy');
   }
 
   onForeground(): void {
-    // Ability has brought to foreground
     ClientCoreSDK.Log.debug(TAG+ 'Ability onForeground');
   }
 
   onBackground(): void {
-    // Ability has back to background
     ClientCoreSDK.Log.debug(TAG+ 'Ability onBackground');
   }
 }
