@@ -194,77 +194,72 @@ export struct WhackAMole {
 // ==================== 贪吃蛇 ====================
 @Component
 export struct SnakeGame {
-  @State snake: number[][] = [[5, 7], [5, 8], [5, 9]];  // [row, col]
+  @State snake: number[][] = [[5, 7], [5, 8], [5, 9]];
   @State food: number[] = [3, 5];
-  @State direction: string = 'UP';
+  @State snakeDir: string = 'UP';
   @State score: number = 0;
   @State playing: boolean = false;
   @State gameOver: boolean = false;
   private gameTimer: number = -1;
   private gridSize: number = 15;
+  // 预生成的网格索引数组
+  private rowIds: string[] = ['r0','r1','r2','r3','r4','r5','r6','r7','r8','r9','r10','r11','r12','r13','r14'];
+  private colIds: string[] = ['c0','c1','c2','c3','c4','c5','c6','c7','c8','c9','c10','c11','c12','c13','c14'];
   onBack?: () => void;
 
   startGame() {
     this.snake = [[7, 7], [7, 8], [7, 9]];
-    this.direction = 'UP';
+    this.snakeDir = 'UP';
     this.score = 0;
     this.playing = true;
     this.gameOver = false;
     this.spawnFood();
-
-    this.gameTimer = setInterval(() => {
-      this.move();
-    }, 200);
+    this.gameTimer = setInterval(() => { this.move(); }, 200);
   }
 
   spawnFood() {
-    let row: number, col: number;
-    do {
+    let row: number = 0;
+    let col: number = 0;
+    let found: boolean = false;
+    for (let tries = 0; tries < 100; tries++) {
       row = Math.floor(Math.random() * this.gridSize);
       col = Math.floor(Math.random() * this.gridSize);
-    } while (this.isOnSnake(row, col));
-    this.food = [row, col];
+      if (!this.isOnSnake(row, col)) { found = true; break; }
+    }
+    if (found) { this.food = [row, col]; }
   }
 
   isOnSnake(row: number, col: number): boolean {
-    for (let s of this.snake) {
+    for (let i = 0; i < this.snake.length; i++) {
+      let s = this.snake[i];
       if (s[0] === row && s[1] === col) return true;
     }
     return false;
   }
 
   move() {
-    let head = this.snake[0];
+    let head: number[] = this.snake[0];
     let newHead: number[] = [head[0], head[1]];
 
-    if (this.direction === 'UP') newHead[0]--;
-    if (this.direction === 'DOWN') newHead[0]++;
-    if (this.direction === 'LEFT') newHead[1]--;
-    if (this.direction === 'RIGHT') newHead[1]++;
+    if (this.snakeDir === 'UP') { newHead[0] = newHead[0] - 1; }
+    if (this.snakeDir === 'DOWN') { newHead[0] = newHead[0] + 1; }
+    if (this.snakeDir === 'LEFT') { newHead[1] = newHead[1] - 1; }
+    if (this.snakeDir === 'RIGHT') { newHead[1] = newHead[1] + 1; }
 
-    // 撞墙
     if (newHead[0] < 0 || newHead[1] < 0 || newHead[0] >= this.gridSize || newHead[1] >= this.gridSize) {
-      this.endGame();
-      return;
+      this.endGame(); return;
     }
-    // 撞自己
-    if (this.isOnSnake(newHead[0], newHead[1])) {
-      this.endGame();
-      return;
-    }
+    if (this.isOnSnake(newHead[0], newHead[1])) { this.endGame(); return; }
 
     let newSnake: number[][] = [newHead];
     for (let i = 0; i < this.snake.length - 1; i++) {
       newSnake.push(this.snake[i]);
     }
-
-    // 吃到食物
     if (newHead[0] === this.food[0] && newHead[1] === this.food[1]) {
       newSnake.push(this.snake[this.snake.length - 1]);
-      this.score += 10;
+      this.score = this.score + 10;
       this.spawnFood();
     }
-
     this.snake = newSnake;
   }
 
@@ -276,10 +271,10 @@ export struct SnakeGame {
 
   handleKey(key: string) {
     if (!this.playing) return;
-    if (key === 'UP' && this.direction !== 'DOWN') this.direction = 'UP';
-    if (key === 'DOWN' && this.direction !== 'UP') this.direction = 'DOWN';
-    if (key === 'LEFT' && this.direction !== 'RIGHT') this.direction = 'LEFT';
-    if (key === 'RIGHT' && this.direction !== 'LEFT') this.direction = 'RIGHT';
+    if (key === 'UP' && this.snakeDir !== 'DOWN') { this.snakeDir = 'UP'; }
+    if (key === 'DOWN' && this.snakeDir !== 'UP') { this.snakeDir = 'DOWN'; }
+    if (key === 'LEFT' && this.snakeDir !== 'RIGHT') { this.snakeDir = 'LEFT'; }
+    if (key === 'RIGHT' && this.snakeDir !== 'LEFT') { this.snakeDir = 'RIGHT'; }
   }
 
   aboutToDisappear() {
@@ -289,7 +284,7 @@ export struct SnakeGame {
   build() {
     Column() {
       Row() {
-        Text('←').fontSize(24).onClick(() => { this.endGame(); if (this.onBack) this.onBack(); })
+        Text('←').fontSize(24).onClick(() => { this.endGame(); if (this.onBack) { this.onBack(); } })
         Blank()
         Text('🐍 贪吃蛇').fontSize(18).fontWeight(FontWeight.Bold)
         Blank()
@@ -299,45 +294,34 @@ export struct SnakeGame {
 
       Text('得分：' + this.score.toString()).fontSize(16).fontWeight(FontWeight.Bold).width('88%').margin({ bottom: 8 })
 
-      // 游戏盘
       Column() {
-        ForEach(Array.from({length: this.gridSize}, (_, r: number) => r.toString()), (r: string) => {
+        ForEach(this.rowIds, (r: string, ri: number) => {
           Row() {
-            ForEach(Array.from({length: this.gridSize}, (_, c: number) => c.toString()), (c: string) => {
-              let ri = parseInt(r);
-              let ci = parseInt(c);
-              let isSnake = this.isOnSnake(ri, ci);
-              let isFood = this.food[0] === ri && this.food[1] === ci;
-              let isHead = this.snake.length > 0 && this.snake[0][0] === ri && this.snake[0][1] === ci;
-
-              Text(isHead ? '🟢' : isSnake ? '🟩' : isFood ? '🍎' : '·')
+            ForEach(this.colIds, (c: string, ci: number) => {
+              let isSnake: boolean = this.isOnSnake(ri, ci);
+              let isFood: boolean = this.food[0] === ri && this.food[1] === ci;
+              let isHead: boolean = this.snake.length > 0 && this.snake[0][0] === ri && this.snake[0][1] === ci;
+              Text(isHead ? '🟢' : (isSnake ? '🟩' : (isFood ? '🍎' : '·')))
                 .fontSize(isHead || isFood ? 14 : 8)
                 .width(20).height(20)
                 .textAlign(TextAlign.Center)
-            }, (c: string) => c)
+            }, (c: string, ci: number) => c)
           }
-        }, (r: string) => r)
+        }, (r: string, ri: number) => r)
       }
-      .padding(4)
-      .backgroundColor('#E8F5E9')
-      .borderRadius(8)
+      .padding(4).backgroundColor('#E8F5E9').borderRadius(8)
 
       Blank()
 
-      // 方向键
       if (this.playing) {
         Column() {
-          Row() {
-            this.DirButton('⬆️', 'UP')
-          }
+          Row() { this.DirButton('⬆️', 'UP') }
           Row() {
             this.DirButton('⬅️', 'LEFT')
             Text('   ').fontSize(24)
             this.DirButton('➡️', 'RIGHT')
           }
-          Row() {
-            this.DirButton('⬇️', 'DOWN')
-          }
+          Row() { this.DirButton('⬇️', 'DOWN') }
         }
         .margin({ bottom: 30 })
       }
