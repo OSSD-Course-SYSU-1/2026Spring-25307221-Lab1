@@ -6,7 +6,7 @@
 
 ## 📹 演示视频
 
-> 百度网盘：[点击下载](https://pan.baidu.com/s/1znSd-du7APZPitNTJ3ctKw)  提取码：`q5m4`
+> 项目内直接查看：[videos/demo.mp4](videos/demo.mp4)（点击 Download 下载观看）
 
 ---
 
