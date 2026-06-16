@@ -374,14 +374,19 @@ struct MainPage {
 
               // 个人信息卡片
               Row() {
-                Image($r('app.media.app_icon'))
-                  .width(60)
-                  .height(60)
-                  .borderRadius(8)
-                  .margin({ right: 16 })
+                Column() {
+                  Text('😊')
+                    .fontSize(32)
+                }
+                .width(60).height(60)
+                .borderRadius(30)
+                .backgroundColor('#E3F2FD')
+                .justifyContent(FlexAlign.Center)
+                .alignItems(HorizontalAlign.Center)
+                .margin({ right: 16 })
 
                 Column() {
-                  Text('用户名')
+                  Text('HarmonyChat用户')
                     .fontSize(18)
                     .fontWeight(FontWeight.Bold)
                   Text('微信号：wxid_xxx')
@@ -392,10 +397,9 @@ struct MainPage {
                 .alignItems(HorizontalAlign.Start)
                 .layoutWeight(1)
 
-                Image($r('app.media.app_icon'))
-                  .width(20)
-                  .height(20)
-                  .opacity(0.5)
+                Text('›')
+                  .fontSize(24)
+                  .fontColor('#CCC')
               }
               .width('100%')
               .padding(16)

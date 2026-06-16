@@ -75,13 +75,16 @@ export struct MsgView_normal {
 
   @Builder
   AvatarImage(isOutgoing: boolean) {
-    Image($r(isOutgoing ? "app.media.default_avatar1": "app.media.default_avatar2"))
-      .backgroundColor(Color.White)
-      .objectFit(ImageFit.Fill)
-      .width(40)
-      .height(40)
-      .borderRadius(20)
-      .margin({ left: 8, right: 8 })
+    Column() {
+      Text(isOutgoing ? '😊' : '🤖')
+        .fontSize(22)
+    }
+    .width(40).height(40)
+    .borderRadius(20)
+    .backgroundColor(isOutgoing ? '#E3F2FD' : '#F3E5F5')
+    .justifyContent(FlexAlign.Center)
+    .alignItems(HorizontalAlign.Center)
+    .margin({ left: 8, right: 8 })
   }
 
   @Builder
