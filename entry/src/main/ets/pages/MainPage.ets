@@ -30,8 +30,6 @@ struct MainPage {
   @State userNickname: string = 'HarmonyChat用户';
   @State editingNickname: boolean = false;
   @State nicknameDraft: string = '';
-  @State isDarkMode: boolean = false;
-  @State fontSize: number = 14;
   private todayStr: string = new Date().getFullYear().toString() + '-' +
     ((new Date().getMonth() + 1).toString().padStart(2, '0')) + '-' +
     (new Date().getDate().toString().padStart(2, '0'));
@@ -425,32 +423,6 @@ struct MainPage {
                 }
               })
 
-              // 功能列表
-              List({ space: 1 }) {
-                ListItem() {
-                  Row() {
-                    Text('🌙').fontSize(18).margin({ right: 14 })
-                    Text('深色模式').fontSize(16).layoutWeight(1)
-                    Toggle({ type: ToggleType.Switch, isOn: this.isDarkMode })
-                      .onChange((value: boolean) => {
-                        this.isDarkMode = value;
-                        promptAction.showToast({ message: value ? '深色模式已开启' : '浅色模式已开启' });
-                      })
-                  }
-                  .width('100%').height(56).padding({ left: 16, right: 16 }).backgroundColor(Color.White)
-                }
-                ListItem() {
-                  Row() {
-                    Text('🔤').fontSize(18).margin({ right: 14 })
-                    Text('字体大小：' + this.fontSize.toString() + 'px').fontSize(16).layoutWeight(1)
-                    Text('A+').fontSize(13).fontColor('#07C160').margin({ right: 6 })
-                      .onClick(() => { if (this.fontSize < 20) { this.fontSize = this.fontSize + 1; } })
-                    Text('A-').fontSize(13).fontColor('#FF6B6B')
-                      .onClick(() => { if (this.fontSize > 10) { this.fontSize = this.fontSize - 1; } })
-                  }
-                  .width('100%').height(56).padding({ left: 16, right: 16 }).backgroundColor(Color.White)
-                }
-              }
               .width('100%')
 
               Blank()
