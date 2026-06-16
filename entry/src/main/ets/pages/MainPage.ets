@@ -805,20 +805,19 @@ struct MainPage {
 
           Divider().strokeWidth(0.5).color('#EEE').margin({ top: 4, bottom: 4 })
 
-          // 用户评论输入
+          // 快捷回复
           Row() {
-            Text('👤').fontSize(16)
-            TextInput({ placeholder: '说点什么…' })
-              .fontSize(12).backgroundColor('#F5F5F5').borderRadius(12).height(28).layoutWeight(1)
-              .padding({ left: 10, right: 10 }).margin({ left: 6, right: 6 })
-              .onSubmit((enter: SubmitEvent) => {
-                let text = enter.text;
-                if (text && text.trim().length > 0) {
-                  post.comments.push({ userName: '我', userAvatar: '👤', content: text, isAI: false });
-                }
-              })
+            Text('回复：').fontSize(11).fontColor('#999')
+            Text('👍').fontSize(16).margin({ left: 6 })
+              .onClick(() => { post.comments.push({ userName: '我', userAvatar: '👤', content: '👍', isAI: false }); })
+            Text('❤️').fontSize(16).margin({ left: 6 })
+              .onClick(() => { post.comments.push({ userName: '我', userAvatar: '👤', content: '❤️', isAI: false }); })
+            Text('💪').fontSize(16).margin({ left: 6 })
+              .onClick(() => { post.comments.push({ userName: '我', userAvatar: '👤', content: '💪', isAI: false }); })
+            Text('✨').fontSize(16).margin({ left: 6 })
+              .onClick(() => { post.comments.push({ userName: '我', userAvatar: '👤', content: '✨', isAI: false }); })
           }
-          .width('100%')
+          .margin({ top: 4 })
         }
         .width('100%').margin({ top: 8 }).padding({ top: 8, left: 4, right: 4 })
         .backgroundColor('#FAFAFA').borderRadius(8)
