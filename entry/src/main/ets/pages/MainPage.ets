@@ -6,6 +6,7 @@ import { CommunityPost, moodOptions, MoodRecord, TreeHolePost, generateAIFeed, a
 import { BreakpointType, getBreakpoint } from './common/BreakpointSystem';
 import { window } from '@kit.ArkUI';
 import { promptAction } from '@kit.ArkUI';
+import { GameMenu, WhackAMole, SnakeGame } from './components/MiniGameView';
 
 @Entry
 @Component
@@ -25,6 +26,8 @@ struct MainPage {
   @State showMoodPicker: boolean = false;
   @State showTreeHoleInput: boolean = false;
   @State treeHoleDraft: string = '';
+  // 游戏状态
+  @State currentGame: string = '';  // '' | '打地鼠' | '贪吃蛇'
   private todayStr: string = new Date().getFullYear().toString() + '-' +
     ((new Date().getMonth() + 1).toString().padStart(2, '0')) + '-' +
     (new Date().getDate().toString().padStart(2, '0'));
@@ -50,40 +53,30 @@ struct MainPage {
 
       Column() {
         Tabs({ index: this.currentIndex }) {
-          // ==================== Tab 1: 消息 ====================
+          // ==================== Tab 1: 游戏 ====================
           TabContent() {
-            Column() {
-              Row() {
-                Text('消息')
-                  .fontSize(20)
-                  .fontWeight(FontWeight.Bold)
-                  .layoutWeight(1)
-
-                Image($r('app.media.app_icon'))
-                  .width(24)
-                  .height(24)
-                  .onClick(() => {
-                    this.isMenuVisible = !this.isMenuVisible;
+            Stack() {
+              if (this.currentGame === '') {
+                // 游戏选择菜单
+                Column() {
+                  GameMenu({
+                    onSelect: (game: string) => { this.currentGame = game; }
                   })
+                }
+                .width('100%').height('100%').backgroundColor('#FAFAFA')
+              } else if (this.currentGame === '打地鼠') {
+                WhackAMole({
+                  onBack: () => { this.currentGame = ''; }
+                })
+              } else if (this.currentGame === '贪吃蛇') {
+                SnakeGame({
+                  onBack: () => { this.currentGame = ''; }
+                })
               }
-              .width('100%')
-              .height(56)
-              .padding({ left: 16, right: 16 })
-
-              List({ space: 2 }) {
-                ForEach(aiFriends, (friend: AIFriend) => {
-                  ListItem() {
-                    this.friendItem(friend)
-                  }
-                }, (friend: AIFriend) => friend.name)
-              }
-              .width('100%')
-              .layoutWeight(1)
             }
-            .width('100%')
-            .height('100%')
+            .width('100%').height('100%')
           }
-          .tabBar(this.TabBuilder('消息', 0, '💬'))
+          .tabBar(this.TabBuilder('游戏', 0, '🎮'))
           .align(Alignment.Top)
 
           // ==================== Tab 2: AI广场 ====================
