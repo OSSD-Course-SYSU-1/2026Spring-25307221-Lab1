@@ -1,28 +1,17 @@
 /**
- * 社区数据模型 — 动态帖子 + 学习打卡 + 心情日记 + 树洞。
+ * 社区数据模型 — AI朋友圈 + 心情日记 + 树洞 + 打卡。
  */
 
 // 帖子
 export interface CommunityPost {
   id: string;
   userName: string;
-  userAvatar: string;  // emoji 头像
+  userAvatar: string;
   content: string;
-  topic: string;       // 话题标签
-  topicColor: string;
   likeCount: number;
   commentCount: number;
-  timeAgo: string;     // 如 "3分钟前"
+  timeAgo: string;
   isLiked: boolean;
-  source?: string;     // '树洞' 表示来自树洞
-}
-
-// 打卡用户
-export interface CheckInUser {
-  name: string;
-  emoji: string;
-  streak: number;      // 连续打卡天数
-  rank: number;
 }
 
 // 心情选项
@@ -44,162 +33,170 @@ export const moodOptions: MoodOption[] = [
 
 // 心情记录
 export interface MoodRecord {
-  date: string;    // 'YYYY-MM-DD'
+  date: string;
   emoji: string;
   label: string;
-  note: string;    // 心情备注
 }
 
-// 树洞帖子（匿名）
+// 树洞帖子
 export interface TreeHolePost {
   id: string;
   content: string;
-  mood: string;      // emoji
+  mood: string;
   timeAgo: string;
   likeCount: number;
   isLiked: boolean;
 }
 
-// 初始心情历史（最近7天模拟数据）
-export function getInitialMoodHistory(): MoodRecord[] {
-  let today = new Date();
-  let result: MoodRecord[] = [];
-  for (let i = 6; i >= 0; i--) {
-    let d = new Date(today);
-    d.setDate(d.getDate() - i);
-    let dateStr = d.getFullYear().toString() + '-' +
-      ((d.getMonth() + 1).toString().padStart(2, '0')) + '-' +
-      (d.getDate().toString().padStart(2, '0'));
-    let mood = moodOptions[Math.floor(Math.random() * moodOptions.length)];
-    result.push({ date: dateStr, emoji: mood.emoji, label: mood.label, note: '' });
-  }
-  return result;
-}
-
-// 模拟社区动态
-export const communityPosts: CommunityPost[] = [
-  {
-    id: 'p1',
-    userName: '代码诗人',
-    userAvatar: '🧑‍💻',
-    content: '用HarmonyOS NEXT写了一周的代码，终于把自定义组件搞明白了。ArkTS虽然限制多，但习惯了反而觉得很清晰。分享一个心得：@Builder 里面不能用 let，所有数据要提前放到组件状态里。',
-    topic: '编程',
-    topicColor: '#22A699',
-    likeCount: 128,
-    commentCount: 23,
-    timeAgo: '5分钟前',
-    isLiked: false
-  },
-  {
-    id: 'p2',
-    userName: '考研上岸中',
-    userAvatar: '📚',
-    content: '今天刷完了李永乐的线性代数第六章，做了30道题，错了5道。把错题整理了一下，发现主要卡在特征值和特征向量那块。有没有一起打卡的？互相监督！',
-    topic: '学习打卡',
-    topicColor: '#4A90D9',
-    likeCount: 89,
-    commentCount: 15,
-    timeAgo: '18分钟前',
-    isLiked: true
-  },
-  {
-    id: 'p3',
-    userName: '穿搭小能手',
-    userAvatar: '👗',
-    content: '最近发现了一个万能公式：白色衬衫 + 高腰阔腿裤 + 细腰带 = 秒变气质小姐姐。面试、约会、通勤都能穿。关键是衬衫要塞进去，腰线决定一切！',
-    topic: '穿搭',
-    topicColor: '#E8658A',
-    likeCount: 256,
-    commentCount: 42,
-    timeAgo: '32分钟前',
-    isLiked: false
-  },
-  {
-    id: 'p4',
-    userName: '神秘占星师',
-    userAvatar: '🔮',
-    content: '今天帮三位朋友抽了塔罗牌。第一位抽到"星星"正位——最近会有好消息。第二位"高塔"逆位，要注意人际关系中的误会。第三位太神奇了，三张全是圣杯牌组，感情运爆棚！',
-    topic: '塔罗',
-    topicColor: '#7B2D8E',
-    likeCount: 67,
-    commentCount: 9,
-    timeAgo: '1小时前',
-    isLiked: false
-  },
-  {
-    id: 'p5',
-    userName: '产品经理日记',
-    userAvatar: '📋',
-    content: '面试了5家公司，总结一下高频问题：1. 你怎么做需求优先级排序？2. 说一个你推动的最难的项目。3. 如何看待AI对产品经理的影响？建议大家提前准备STAR法则的回答模板，真的有用。',
-    topic: '求职',
-    topicColor: '#2C3E6B',
-    likeCount: 312,
-    commentCount: 56,
-    timeAgo: '2小时前',
-    isLiked: true
-  },
-  {
-    id: 'p6',
-    userName: '英语学习bot',
-    userAvatar: '🌍',
-    content: '今日双语金句："The only way to do great work is to love what you do." — Steve Jobs\n\n做伟大工作的唯一途径是热爱你所做的事。\n\n大家早安，今天也要加油呀 ✨',
-    topic: '学习打卡',
-    topicColor: '#4A90D9',
-    likeCount: 445,
-    commentCount: 38,
-    timeAgo: '3小时前',
-    isLiked: false
-  },
-  {
-    id: 'p7',
-    userName: '健身狂魔',
-    userAvatar: '💪',
-    content: '坚持健身第87天。分享一下今天的训练：俯卧撑100个 + 卷腹200个 + 跑步5公里。最大的感受不是身材变化，是精力变好了，上课不容易犯困。真的推荐大家试试运动。',
-    topic: '生活',
-    topicColor: '#E67E22',
-    likeCount: 198,
-    commentCount: 27,
-    timeAgo: '4小时前',
-    isLiked: false
-  },
-  {
-    id: 'p8',
-    userName: '读书笔记',
-    userAvatar: '📖',
-    content: '刚读完《认知觉醒》，一句话总结：焦虑的本质是"想同时做很多事又想立即看到效果"。破解方法很简单——一次只做一件事，先完成再完美。这本书推荐给所有大学生。',
-    topic: '学习打卡',
-    topicColor: '#4A90D9',
-    likeCount: 534,
-    commentCount: 89,
-    timeAgo: '5小时前',
-    isLiked: true
-  }
-];
-
-// 话题列表
-export interface Topic {
+// AI朋友
+interface AIFriend {
   name: string;
-  color: string;
+  emoji: string;
+  personality: string;
 }
 
-export const topics: Topic[] = [
-  { name: '全部', color: '#333333' },
-  { name: '学习打卡', color: '#4A90D9' },
-  { name: '编程', color: '#22A699' },
-  { name: '穿搭', color: '#E8658A' },
-  { name: '塔罗', color: '#7B2D8E' },
-  { name: '求职', color: '#2C3E6B' },
-  { name: '生活', color: '#E67E22' }
+const aiFriends: AIFriend[] = [
+  { name: '代码诗人', emoji: '🧑‍💻', personality: '技术宅，喜欢分享编程心得' },
+  { name: '考研上岸中', emoji: '📚', personality: '勤奋的考研党，每天打卡学习' },
+  { name: '穿搭小能手', emoji: '👗', personality: '时尚达人，分享穿搭灵感' },
+  { name: '咖啡与书', emoji: '☕', personality: '文艺青年，喜欢读书和思考' },
+  { name: '健身狂魔', emoji: '💪', personality: '自律健身爱好者，充满正能量' },
+  { name: '小太阳', emoji: '🌻', personality: '乐观开朗，总能看到事情好的一面' },
+  { name: '深夜画师', emoji: '🎨', personality: '感性细腻，用画笔记录生活' },
+  { name: '产品经理日记', emoji: '📋', personality: '职场新人，分享求职和成长心得' }
 ];
 
-// 模拟打卡排行
+// 心情相关的帖子模板（根据用户心情选择）
+function getMoodPosts(userMood: string): { friend: AIFriend, content: string }[] {
+  let posts: { friend: AIFriend, content: string }[] = [];
+
+  // 通用帖子（始终出现）
+  posts.push({ friend: aiFriends[0], content: '写了三天的HarmonyOS组件终于跑通了！ArkTS虽然规矩多，但写着写着就习惯了。分享一个坑：@Builder里不能声明变量，记住这个少走很多弯路。' });
+  posts.push({ friend: aiFriends[1], content: '今日学习打卡 ☑️ 线代刷完第六章，正确率比上周高了。坚持真的有用，给自己加个鸡腿 🍗' });
+  posts.push({ friend: aiFriends[3], content: '读到一句很喜欢的话："种一棵树最好的时间是十年前，其次是现在。" 与其焦虑未来，不如做好当下能做的事。' });
+
+  // 根据心情添加对应帖子（自然融入，不直接提及用户）
+  if (userMood === '😢' || userMood === '😰' || userMood === '😤') {
+    // 用户心情低落 → 多一些温暖鼓励的内容
+    posts.push({ friend: aiFriends[5], content: '今天看到一句话，想分享给需要的人："没有不会好的伤，没有不会停的雨。" 如果今天不开心，就早点休息吧，明天又是新的一天 🌤️' });
+    posts.push({ friend: aiFriends[4], content: '跑步的时候发现一个规律：最累的时候再坚持一下，过了那个点就轻松了。生活好像也是这样 🤔' });
+    posts.push({ friend: aiFriends[6], content: '画了一幅小画：一只猫在窗台上晒太阳。有时候最简单的画面反而最治愈。希望看到的人也能感受到一点温暖 🐱☀️' });
+  } else if (userMood === '🤩' || userMood === '🥳') {
+    // 用户心情好 → 更多快乐分享
+    posts.push({ friend: aiFriends[2], content: '今天逛到一条超好看的碎花裙！分享一下今天的OOTD：碎花裙+小白鞋+草编包，春天感拉满 👗✨' });
+    posts.push({ friend: aiFriends[5], content: '生活小确幸：地铁上有人给我让座（虽然我只是背了个大包😂）、买到了最后一杯限定奶茶、夕阳特别美。开心的事虽小，但攒起来就是一整天的好心情～' });
+  } else {
+    // 中性心情 → 正常内容
+    posts.push({ friend: aiFriends[2], content: '发现一个穿搭bug：横条纹显胖是真的！今天试了一件横条纹T恤，果断放下换了竖条纹的，视觉差起码5斤 😂' });
+    posts.push({ friend: aiFriends[7], content: '面了第五家公司，终于收到offer了！分享一下经验：STAR法则准备充分真的太重要了，面试官说我的项目经历讲得很清晰。' });
+  }
+
+  // 随机再补几条
+  posts.push({ friend: aiFriends[4], content: 'Day 95 健身打卡 💪 今天练腿，差点爬着出健身房。但想想已经坚持快100天了，不能断！' });
+  posts.push({ friend: aiFriends[7], content: '发现一个提高效率的方法：番茄工作法 + 手机放另一个房间 = 生产力翻倍。今天一口气搞完3个任务，爽！' });
+
+  return posts;
+}
+
+// 树洞相关的帖子模板（用户发树洞后，AI朋友发相关但不直指的内容）
+function getTreeHoleResponsePosts(treeHoleContent: string): { friend: AIFriend, content: string }[] {
+  let posts: { friend: AIFriend, content: string }[] = [];
+  let content = treeHoleContent.toLowerCase();
+
+  if (content.includes('考试') || content.includes('成绩') || content.includes('复习')) {
+    posts.push({ friend: aiFriends[1], content: '关于考试，我最大的感悟是：不要和别人比进度，按自己的节奏来。每个人都有自己的时区，慢慢来反而比较快。' });
+  }
+  if (content.includes('吵架') || content.includes('朋友') || content.includes('室友')) {
+    posts.push({ friend: aiFriends[5], content: '人与人之间的关系真的很微妙。有时候退一步不是认输，是给彼此空间。真正在乎的人，冷静下来都会理解的。' });
+  }
+  if (content.includes('迷茫') || content.includes('未来') || content.includes('工作')) {
+    posts.push({ friend: aiFriends[3], content: '迷茫的时候怎么办？我的方法是：先做好手头最小的一件事。整理桌面、写一行代码、读一页书——行动是焦虑的解药。' });
+  }
+  if (content.includes('累') || content.includes('压力') || content.includes('忙')) {
+    posts.push({ friend: aiFriends[4], content: '累了就歇歇，没什么大不了的。机器都需要休息，何况是人。今天不打卡也没关系，明天继续就好 ❤️' });
+  }
+
+  // 再随机加一条中性内容，不让回复太集中
+  posts.push({ friend: aiFriends[6], content: '画了一下午水彩，虽然画得很烂但过程超解压。推荐给所有想放松的朋友——不用画得好，享受过程就行 🎨' });
+
+  return posts;
+}
+
+/**
+ * 生成AI朋友圈动态流。
+ * @param userMood 用户今日心情emoji（空字符串表示未设置）
+ * @param treeHolePosts 用户最近的树洞帖子
+ */
+export function generateAIFeed(userMood: string, treeHolePosts: TreeHolePost[]): CommunityPost[] {
+  let moods = getMoodPosts(userMood || '😊');
+  let posts: CommunityPost[] = [];
+
+  // 把心情相关帖子转成CommunityPost，混入时间差
+  for (let i = 0; i < moods.length; i++) {
+    let m = moods[i];
+    posts.push({
+      id: 'mp' + i.toString(),
+      userName: m.friend.name,
+      userAvatar: m.friend.emoji,
+      content: m.content,
+      likeCount: Math.floor(Math.random() * 300) + 20,
+      commentCount: Math.floor(Math.random() * 40) + 3,
+      timeAgo: (i * 12 + 3).toString() + '分钟前',
+      isLiked: i === 0
+    });
+  }
+
+  // 如果有树洞内容，插入相关帖子（但间隔分散，不集中出现）
+  let treeHoleResponses: CommunityPost[] = [];
+  if (treeHolePosts.length > 0) {
+    let lastTreeHole = treeHolePosts[0];
+    let responses = getTreeHoleResponsePosts(lastTreeHole.content);
+    for (let i = 0; i < responses.length; i++) {
+      let r = responses[i];
+      treeHoleResponses.push({
+        id: 'thr' + i.toString(),
+        userName: r.friend.name,
+        userAvatar: r.friend.emoji,
+        content: r.content,
+        likeCount: Math.floor(Math.random() * 200) + 10,
+        commentCount: Math.floor(Math.random() * 20) + 1,
+        timeAgo: (i * 25 + 8).toString() + '分钟前',
+        isLiked: false
+      });
+    }
+  }
+
+  // 合并并按时间交错排列，树洞回复穿插在中间不显眼的位置
+  let allPosts: CommunityPost[] = [];
+  let ti = 0;
+  let mi = 0;
+  // 前两条放心情帖子
+  if (posts.length > 0) { allPosts.push(posts[mi++]); }
+  if (posts.length > 1) { allPosts.push(posts[mi++]); }
+  // 中间穿插树洞回复
+  while (ti < treeHoleResponses.length) {
+    allPosts.push(treeHoleResponses[ti++]);
+  }
+  // 后面继续心情帖子
+  while (mi < posts.length) {
+    allPosts.push(posts[mi++]);
+  }
+
+  return allPosts;
+}
+
+// 打卡排行（保持不变）
+export interface CheckInUser {
+  name: string;
+  emoji: string;
+  streak: number;
+  rank: number;
+}
+
 export const checkInRanking: CheckInUser[] = [
   { name: '考研上岸中', emoji: '📚', streak: 47, rank: 1 },
   { name: '健身狂魔', emoji: '💪', streak: 87, rank: 1 },
   { name: '代码诗人', emoji: '🧑‍💻', streak: 32, rank: 3 },
-  { name: '英语学习bot', emoji: '🌍', streak: 28, rank: 4 },
-  { name: '读书笔记', emoji: '📖', streak: 21, rank: 5 },
-  { name: '产品经理日记', emoji: '📋', streak: 15, rank: 6 },
-  { name: '穿搭小能手', emoji: '👗', streak: 12, rank: 7 },
-  { name: '神秘占星师', emoji: '🔮', streak: 9, rank: 8 }
+  { name: '咖啡与书', emoji: '☕', streak: 28, rank: 4 },
+  { name: '小太阳', emoji: '🌻', streak: 21, rank: 5 },
 ];

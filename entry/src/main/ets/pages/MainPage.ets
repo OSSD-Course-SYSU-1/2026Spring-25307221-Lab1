@@ -2,7 +2,7 @@ import { allContacts, recentContacts, Contact } from '../model/ContactModel';
 import router from '@ohos.router';
 import { aiCharacters, AICharacter } from '../model/AICharacterData'
 import { aiTools, AITool } from '../model/ToolData'
-import { communityPosts, CommunityPost, topics, checkInRanking, moodOptions, MoodRecord, TreeHolePost, getInitialMoodHistory } from '../model/CommunityData'
+import { CommunityPost, moodOptions, MoodRecord, TreeHolePost, generateAIFeed } from '../model/CommunityData'
 import { BreakpointType, getBreakpoint } from './common/BreakpointSystem';
 import { window } from '@kit.ArkUI';
 import { promptAction } from '@kit.ArkUI';
@@ -15,14 +15,13 @@ struct MainPage {
   @State currentBreakpoint: BreakpointType = BreakpointType.SM;
   private windowWidth: number = 360;
   // 社区状态
-  @State communitySelectedTopic: string = '全部';
-  @State userStreak: number = 0;           // 连续打卡天数
-  @State checkedInToday: boolean = false;  // 今天是否已打卡
-  @State todayMood: string = '';           // 今日心情 emoji
-  @State moodNote: string = '';            // 心情备注
-  @State moodHistory: MoodRecord[] = getInitialMoodHistory();
+  @State userStreak: number = 0;
+  @State checkedInToday: boolean = false;
+  @State todayMood: string = '';
+  @State moodHistory: MoodRecord[] = [];
   @State treeHolePosts: TreeHolePost[] = [];
-  @State posts: CommunityPost[] = communityPosts;
+  @State posts: CommunityPost[] = [];
+  @State showMoodPicker: boolean = false;
   @State showTreeHoleInput: boolean = false;
   @State treeHoleDraft: string = '';
   private todayStr: string = new Date().getFullYear().toString() + '-' +
@@ -36,6 +35,8 @@ struct MainPage {
       this.windowWidth = props.windowRect.width;
       this.currentBreakpoint = getBreakpoint(this.windowWidth);
     });
+    // 初始化AI朋友圈
+    this.refreshFeed();
   }
 
   build() {
@@ -158,252 +159,149 @@ struct MainPage {
           // ==================== Tab 4: 社区 ====================
           TabContent() {
             Column() {
-              // 标题栏
+              // 标题栏 + 打卡
               Row() {
                 Text('社区')
                   .fontSize(20)
                   .fontWeight(FontWeight.Bold)
                   .layoutWeight(1)
-                Text('🌳')
-                  .fontSize(20)
-                  .onClick(() => {
-                    this.showTreeHoleInput = !this.showTreeHoleInput;
-                  })
+
+                // 迷你打卡
+                Row() {
+                  Text(this.userStreak > 0 ? '🔥' : '🕯️')
+                    .fontSize(16)
+                  Text(this.userStreak.toString())
+                    .fontSize(14)
+                    .fontWeight(FontWeight.Bold)
+                    .fontColor(this.checkedInToday ? '#CCC' : '#E67E22')
+                    .margin({ left: 2 })
+                  Text('天')
+                    .fontSize(11)
+                    .fontColor('#999')
+                }
+                .padding({ left: 10, right: 10, top: 4, bottom: 4 })
+                .backgroundColor(Color.White)
+                .borderRadius(14)
+                .onClick(() => {
+                  if (!this.checkedInToday) {
+                    this.userStreak++;
+                    this.checkedInToday = true;
+                    promptAction.showToast({ message: '✅ 打卡成功！已坚持 ' + this.userStreak.toString() + ' 天' });
+                  }
+                })
               }
               .width('100%')
               .height(48)
               .padding({ left: 16, right: 16 })
 
-              // 打卡卡片（每日限一次）
+              // 心情 + 树洞 迷你卡片行
               Row() {
-                Column() {
-                  Text(this.userStreak > 0 ? '🔥' : '🕯️')
+                // 心情迷你卡
+                Row() {
+                  Text(this.todayMood || '📔')
                     .fontSize(22)
-                  Text(this.userStreak > 0 ? '已坚持' : '开始打卡')
-                    .fontSize(11)
-                    .fontColor('#999')
+                  Text(this.todayMood ? '今天 ' + this.getMoodLabel() : '记录心情')
+                    .fontSize(12)
+                    .fontColor(this.todayMood ? '#333' : '#999')
+                    .margin({ left: 6 })
                 }
-                .margin({ right: 12 })
-
-                Text(this.userStreak.toString())
-                  .fontSize(32)
-                  .fontWeight(FontWeight.Bold)
-                  .fontColor(this.checkedInToday ? '#CCC' : '#E67E22')
-                  .margin({ right: 6 })
-
-                Text('天')
-                  .fontSize(14)
-                  .fontColor('#666')
-                  .margin({ top: 12 })
+                .padding({ left: 12, right: 16, top: 10, bottom: 10 })
+                .backgroundColor(Color.White)
+                .borderRadius(20)
+                .shadow({ radius: 2, color: '#00000006', offsetX: 0, offsetY: 1 })
+                .onClick(() => { this.showMoodPicker = !this.showMoodPicker; })
 
                 Blank()
 
-                Button(this.checkedInToday ? '今日已打卡 ✓' : '今日打卡')
-                  .fontSize(13)
-                  .fontColor(this.checkedInToday ? '#AAA' : Color.White)
-                  .backgroundColor(this.checkedInToday ? '#E8E8E8' : '#E67E22')
-                  .borderRadius(18)
-                  .height(34)
-                  .padding({ left: 16, right: 16 })
-                  .enabled(!this.checkedInToday)
-                  .onClick(() => {
-                    if (!this.checkedInToday) {
-                      this.userStreak++;
-                      this.checkedInToday = true;
-                      promptAction.showToast({ message: '✅ 打卡成功！已坚持 ' + this.userStreak.toString() + ' 天' });
-                    }
-                  })
-              }
-              .width('90%')
-              .padding({ top: 14, bottom: 14, left: 18, right: 18 })
-              .backgroundColor(Color.White)
-              .borderRadius(14)
-              .shadow({ radius: 4, color: '#00000008', offsetX: 0, offsetY: 1 })
-              .margin({ bottom: 8 })
-
-              // 心情日记 + 树洞入口行
-              Row() {
-                // 心情日记卡片
-                Column() {
-                  Row() {
-                    Text('📔 心情日记')
-                      .fontSize(14)
-                      .fontWeight(FontWeight.Bold)
-                    Blank()
-                    Text(this.todayStr)
-                      .fontSize(11)
-                      .fontColor('#999')
-                  }
-                  .width('100%')
-                  .margin({ bottom: 8 })
-
-                  if (this.todayMood) {
-                    // 已记录今日心情
-                    Row() {
-                      Text(this.todayMood)
-                        .fontSize(36)
-                      Text('今天心情不错！')
-                        .fontSize(13)
-                        .fontColor('#666')
-                        .margin({ left: 10 })
-                    }
-                    .margin({ bottom: 6 })
-                    .onClick(() => { this.todayMood = ''; })  // 点击可修改
-                  } else {
-                    // 选择心情
-                    Row() {
-                      ForEach(moodOptions.slice(0, 8), (m: import('../model/CommunityData').MoodOption) => {
-                        Text(m.emoji)
-                          .fontSize(28)
-                          .margin({ right: 6 })
-                          .onClick(() => {
-                            this.todayMood = m.emoji;
-                            // 更新心情历史
-                            for (let r of this.moodHistory) {
-                              if (r.date === this.todayStr) {
-                                r.emoji = m.emoji;
-                                r.label = m.label;
-                                return;
-                              }
-                            }
-                            this.moodHistory.push({
-                              date: this.todayStr,
-                              emoji: m.emoji,
-                              label: m.label,
-                              note: ''
-                            });
-                            promptAction.showToast({ message: '今日心情：' + m.label });
-                          })
-                      })
-                    }
-                  }
-                }
-                .width('55%')
-                .padding(12)
-                .backgroundColor(Color.White)
-                .borderRadius(12)
-                .shadow({ radius: 4, color: '#00000008', offsetX: 0, offsetY: 1 })
-
-                // 树洞入口
-                Column() {
-                  Text('🌳')
-                    .fontSize(32)
-                    .margin({ bottom: 2 })
-                  Text('树洞')
-                    .fontSize(14)
-                    .fontWeight(FontWeight.Bold)
-                  Text('说点悄悄话')
-                    .fontSize(10)
-                    .fontColor('#999')
-                }
-                .width('38%')
-                .height('100%')
-                .padding(12)
-                .backgroundColor(Color.White)
-                .borderRadius(12)
-                .justifyContent(FlexAlign.Center)
-                .alignItems(HorizontalAlign.Center)
-                .shadow({ radius: 4, color: '#00000008', offsetX: 0, offsetY: 1 })
-                .onClick(() => {
-                  this.showTreeHoleInput = !this.showTreeHoleInput;
-                })
-              }
-              .width('90%')
-              .justifyContent(FlexAlign.SpaceBetween)
-              .margin({ bottom: 8 })
-
-              // 历史心情条
-              if (this.moodHistory.length > 0) {
+                // 树洞迷你卡
                 Row() {
-                  ForEach(this.moodHistory.slice(-7), (r: MoodRecord) => {
-                    Text(r.emoji)
-                      .fontSize(16)
-                      .margin({ right: 8 })
+                  Text('🌳')
+                    .fontSize(22)
+                  Text('树洞')
+                    .fontSize(12)
+                    .fontColor('#999')
+                    .margin({ left: 6 })
+                }
+                .padding({ left: 12, right: 16, top: 10, bottom: 10 })
+                .backgroundColor(Color.White)
+                .borderRadius(20)
+                .shadow({ radius: 2, color: '#00000006', offsetX: 0, offsetY: 1 })
+                .onClick(() => { this.showTreeHoleInput = !this.showTreeHoleInput; })
+              }
+              .width('100%')
+              .padding({ left: 16, right: 16, bottom: 6 })
+
+              // 心情选择器（点击展开）
+              if (this.showMoodPicker) {
+                Row() {
+                  ForEach(moodOptions, (m: import('../model/CommunityData').MoodOption) => {
+                    Column() {
+                      Text(m.emoji)
+                        .fontSize(26)
+                        .opacity(this.todayMood === m.emoji ? 1 : 0.6)
+                      Text(m.label)
+                        .fontSize(9)
+                        .fontColor(this.todayMood === m.emoji ? '#333' : '#999')
+                    }
+                    .padding(6)
+                    .borderRadius(8)
+                    .backgroundColor(this.todayMood === m.emoji ? '#F0F0F0' : Color.Transparent)
+                    .onClick(() => {
+                      this.todayMood = m.emoji;
+                      this.showMoodPicker = false;
+                      this.refreshFeed();  // 刷新AI朋友圈
+                      promptAction.showToast({ message: '今日心情：' + m.label });
+                    })
                   })
                 }
-                .width('90%')
-                .padding({ top: 4, bottom: 4 })
+                .width('94%')
+                .padding(10)
+                .backgroundColor(Color.White)
+                .borderRadius(14)
+                .margin({ left: 12, right: 12, bottom: 6 })
+                .justifyContent(FlexAlign.SpaceEvenly)
               }
 
-              // 树洞输入区
+              // 树洞输入区（点击展开）
               if (this.showTreeHoleInput) {
                 Column() {
-                  TextInput({ placeholder: '写点什么扔进树洞吧…（匿名）', text: this.treeHoleDraft })
+                  TextInput({ placeholder: '匿名说点什么…', text: this.treeHoleDraft })
                     .width('100%')
-                    .height(60)
+                    .height(44)
                     .backgroundColor('#F8F4FF')
                     .borderRadius(10)
                     .border({ width: 1, color: '#E0D8F0' })
-                    .padding(10)
+                    .padding({ left: 10, right: 10 })
                     .fontSize(14)
                     .onChange((value: string) => { this.treeHoleDraft = value; })
-
                   Row() {
                     Blank()
-                    Button('取消')
-                      .fontSize(12)
-                      .backgroundColor('#EEE')
-                      .borderRadius(14)
-                      .height(30)
+                    Button('取消').fontSize(11).backgroundColor('#EEE').borderRadius(12).height(28)
                       .onClick(() => { this.showTreeHoleInput = false; this.treeHoleDraft = ''; })
-                    Button('匿名发布 🌳')
-                      .fontSize(12)
-                      .fontColor(Color.White)
-                      .backgroundColor('#7B68AE')
-                      .borderRadius(14)
-                      .height(30)
-                      .margin({ left: 10 })
+                    Button('匿名发布').fontSize(11).fontColor(Color.White).backgroundColor('#7B68AE').borderRadius(12).height(28)
+                      .margin({ left: 8 })
                       .onClick(() => { this.submitTreeHole(); })
                   }
                   .width('100%')
-                  .margin({ top: 8 })
+                  .margin({ top: 6 })
                 }
-                .width('90%')
-                .padding(12)
+                .width('94%')
+                .padding(10)
                 .backgroundColor(Color.White)
-                .borderRadius(12)
-                .margin({ bottom: 8 })
+                .borderRadius(14)
+                .margin({ left: 12, right: 12, bottom: 6 })
               }
 
-              // 话题标签栏
-              Row() {
-                Scroll() {
-                  Row() {
-                    ForEach(topics, (t: import('../model/CommunityData').Topic) => {
-                      Text(t.name)
-                        .fontSize(12)
-                        .fontColor(this.communitySelectedTopic === t.name ? Color.White : t.color)
-                        .backgroundColor(this.communitySelectedTopic === t.name ? t.color : '#F0F0F0')
-                        .borderRadius(14)
-                        .padding({ left: 14, right: 14, top: 6, bottom: 6 })
-                        .margin({ right: 8 })
-                        .onClick(() => {
-                          this.communitySelectedTopic = t.name;
-                          if (t.name === '全部') {
-                            this.posts = communityPosts;
-                          } else {
-                            this.posts = communityPosts.filter(p => p.topic === t.name);
-                          }
-                        })
-                    })
-                  }
-                }
-                .scrollable(ScrollDirection.Horizontal)
-                .scrollBar(BarState.Off)
-              }
-              .width('100%')
-              .padding({ left: 14, right: 14, top: 6, bottom: 10 })
-
-              // 动态列表
+              // === AI 朋友圈动态流 ===
               List({ space: 10 }) {
-                // 树洞帖子
+                // 用户自己的树洞帖子
                 ForEach(this.treeHolePosts, (tp: TreeHolePost) => {
                   ListItem() {
                     this.treeHoleCard(tp)
                   }
                 }, (tp: TreeHolePost) => tp.id)
 
-                // 社区帖子
+                // AI朋友动态
                 ForEach(this.posts, (post: CommunityPost) => {
                   ListItem() {
                     this.postCard(post)
@@ -689,6 +587,19 @@ struct MainPage {
     })
   }
 
+  // 刷新AI朋友圈动态
+  refreshFeed() {
+    this.posts = generateAIFeed(this.todayMood, this.treeHolePosts);
+  }
+
+  // 获取心情标签文字
+  getMoodLabel(): string {
+    for (let m of moodOptions) {
+      if (m.emoji === this.todayMood) return m.label;
+    }
+    return '';
+  }
+
   // 发布树洞帖子
   submitTreeHole() {
     if (this.treeHoleDraft.trim().length === 0) {
@@ -709,6 +620,7 @@ struct MainPage {
     this.treeHolePosts = newList;
     this.treeHoleDraft = '';
     this.showTreeHoleInput = false;
+    this.refreshFeed();  // 刷新动态（AI朋友会自然回应）
     promptAction.showToast({ message: '已匿名发布到树洞 🌳' });
   }
 
@@ -764,13 +676,12 @@ struct MainPage {
     .border({ width: 1, color: '#E8E0F0' })
   }
 
-  // 社区帖子卡片
+  // AI朋友圈帖子卡片
   @Builder postCard(post: CommunityPost) {
     Column() {
-      // 用户信息行
       Row() {
         Text(post.userAvatar)
-          .fontSize(32)
+          .fontSize(34)
         Column() {
           Text(post.userName)
             .fontSize(14)
@@ -781,29 +692,17 @@ struct MainPage {
         }
         .margin({ left: 10 })
         .alignItems(HorizontalAlign.Start)
-
-        Blank()
-
-        // 话题标签
-        Text(post.topic)
-          .fontSize(10)
-          .fontColor(post.topicColor)
-          .padding({ left: 8, right: 8, top: 3, bottom: 3 })
-          .backgroundColor(post.topicColor + '18')
-          .borderRadius(8)
       }
       .width('100%')
 
-      // 帖子内容
       Text(post.content)
         .fontSize(14)
         .fontColor('#333')
         .lineHeight(20)
-        .margin({ top: 10, bottom: 12 })
-        .maxLines(5)
+        .margin({ top: 8, bottom: 10 })
+        .maxLines(6)
         .textOverflow({ overflow: TextOverflow.Ellipsis })
 
-      // 底部互动行
       Row() {
         Row() {
           Text(post.isLiked ? '❤️' : '🤍')
@@ -815,31 +714,14 @@ struct MainPage {
         }
         .onClick(() => {
           post.isLiked = !post.isLiked;
-          if (post.isLiked) {
-            post.likeCount++;
-          } else {
-            post.likeCount--;
-          }
+          post.isLiked ? post.likeCount++ : post.likeCount--;
         })
-
         Row() {
-          Text('💬')
-            .fontSize(14)
-          Text(post.commentCount.toString())
+          Text('💬 ' + post.commentCount.toString())
             .fontSize(12)
             .fontColor('#999')
-            .margin({ left: 4 })
         }
         .margin({ left: 24 })
-        .onClick(() => {
-          AlertDialog.show({ message: '评论功能即将上线！' });
-        })
-
-        Blank()
-
-        Text('分享')
-          .fontSize(11)
-          .fontColor('#999')
       }
     }
     .width('100%')
