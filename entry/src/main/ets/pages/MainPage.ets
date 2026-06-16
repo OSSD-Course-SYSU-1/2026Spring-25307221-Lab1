@@ -2,9 +2,10 @@ import { allContacts, recentContacts, Contact } from '../model/ContactModel';
 import router from '@ohos.router';
 import { aiCharacters, AICharacter } from '../model/AICharacterData'
 import { aiTools, AITool } from '../model/ToolData'
-import { communityPosts, CommunityPost, topics, checkInRanking } from '../model/CommunityData'
+import { communityPosts, CommunityPost, topics, checkInRanking, moodOptions, MoodRecord, TreeHolePost, getInitialMoodHistory } from '../model/CommunityData'
 import { BreakpointType, getBreakpoint } from './common/BreakpointSystem';
 import { window } from '@kit.ArkUI';
+import { promptAction } from '@kit.ArkUI';
 
 @Entry
 @Component
@@ -15,9 +16,18 @@ struct MainPage {
   private windowWidth: number = 360;
   // 社区状态
   @State communitySelectedTopic: string = '全部';
-  @State showCheckInToast: boolean = false;
-  private userStreak: number = 31;  // 用户连续打卡天数
+  @State userStreak: number = 0;           // 连续打卡天数
+  @State checkedInToday: boolean = false;  // 今天是否已打卡
+  @State todayMood: string = '';           // 今日心情 emoji
+  @State moodNote: string = '';            // 心情备注
+  @State moodHistory: MoodRecord[] = getInitialMoodHistory();
+  @State treeHolePosts: TreeHolePost[] = [];
   @State posts: CommunityPost[] = communityPosts;
+  @State showTreeHoleInput: boolean = false;
+  @State treeHoleDraft: string = '';
+  private todayStr: string = new Date().getFullYear().toString() + '-' +
+    ((new Date().getMonth() + 1).toString().padStart(2, '0')) + '-' +
+    (new Date().getDate().toString().padStart(2, '0'));
 
   aboutToAppear() {
     let windowClass = window.getLastWindow(getContext(this));
@@ -154,22 +164,22 @@ struct MainPage {
                   .fontSize(20)
                   .fontWeight(FontWeight.Bold)
                   .layoutWeight(1)
-                Text('📝')
+                Text('🌳')
                   .fontSize(20)
                   .onClick(() => {
-                    AlertDialog.show({ message: '发布功能即将上线！' });
+                    this.showTreeHoleInput = !this.showTreeHoleInput;
                   })
               }
               .width('100%')
               .height(48)
               .padding({ left: 16, right: 16 })
 
-              // 打卡卡片
+              // 打卡卡片（每日限一次）
               Row() {
                 Column() {
-                  Text('🔥')
+                  Text(this.userStreak > 0 ? '🔥' : '🕯️')
                     .fontSize(22)
-                  Text('已坚持')
+                  Text(this.userStreak > 0 ? '已坚持' : '开始打卡')
                     .fontSize(11)
                     .fontColor('#999')
                 }
@@ -178,7 +188,7 @@ struct MainPage {
                 Text(this.userStreak.toString())
                   .fontSize(32)
                   .fontWeight(FontWeight.Bold)
-                  .fontColor('#E67E22')
+                  .fontColor(this.checkedInToday ? '#CCC' : '#E67E22')
                   .margin({ right: 6 })
 
                 Text('天')
@@ -188,16 +198,20 @@ struct MainPage {
 
                 Blank()
 
-                Button('今日打卡')
+                Button(this.checkedInToday ? '今日已打卡 ✓' : '今日打卡')
                   .fontSize(13)
-                  .fontColor(Color.White)
-                  .backgroundColor('#E67E22')
+                  .fontColor(this.checkedInToday ? '#AAA' : Color.White)
+                  .backgroundColor(this.checkedInToday ? '#E8E8E8' : '#E67E22')
                   .borderRadius(18)
                   .height(34)
                   .padding({ left: 16, right: 16 })
+                  .enabled(!this.checkedInToday)
                   .onClick(() => {
-                    this.userStreak++;
-                    AlertDialog.show({ message: '✅ 打卡成功！已坚持 ' + this.userStreak.toString() + ' 天' });
+                    if (!this.checkedInToday) {
+                      this.userStreak++;
+                      this.checkedInToday = true;
+                      promptAction.showToast({ message: '✅ 打卡成功！已坚持 ' + this.userStreak.toString() + ' 天' });
+                    }
                   })
               }
               .width('90%')
@@ -205,7 +219,151 @@ struct MainPage {
               .backgroundColor(Color.White)
               .borderRadius(14)
               .shadow({ radius: 4, color: '#00000008', offsetX: 0, offsetY: 1 })
-              .margin({ bottom: 10 })
+              .margin({ bottom: 8 })
+
+              // 心情日记 + 树洞入口行
+              Row() {
+                // 心情日记卡片
+                Column() {
+                  Row() {
+                    Text('📔 心情日记')
+                      .fontSize(14)
+                      .fontWeight(FontWeight.Bold)
+                    Blank()
+                    Text(this.todayStr)
+                      .fontSize(11)
+                      .fontColor('#999')
+                  }
+                  .width('100%')
+                  .margin({ bottom: 8 })
+
+                  if (this.todayMood) {
+                    // 已记录今日心情
+                    Row() {
+                      Text(this.todayMood)
+                        .fontSize(36)
+                      Text('今天心情不错！')
+                        .fontSize(13)
+                        .fontColor('#666')
+                        .margin({ left: 10 })
+                    }
+                    .margin({ bottom: 6 })
+                    .onClick(() => { this.todayMood = ''; })  // 点击可修改
+                  } else {
+                    // 选择心情
+                    Row() {
+                      ForEach(moodOptions.slice(0, 8), (m: import('../model/CommunityData').MoodOption) => {
+                        Text(m.emoji)
+                          .fontSize(28)
+                          .margin({ right: 6 })
+                          .onClick(() => {
+                            this.todayMood = m.emoji;
+                            // 更新心情历史
+                            for (let r of this.moodHistory) {
+                              if (r.date === this.todayStr) {
+                                r.emoji = m.emoji;
+                                r.label = m.label;
+                                return;
+                              }
+                            }
+                            this.moodHistory.push({
+                              date: this.todayStr,
+                              emoji: m.emoji,
+                              label: m.label,
+                              note: ''
+                            });
+                            promptAction.showToast({ message: '今日心情：' + m.label });
+                          })
+                      })
+                    }
+                  }
+                }
+                .width('55%')
+                .padding(12)
+                .backgroundColor(Color.White)
+                .borderRadius(12)
+                .shadow({ radius: 4, color: '#00000008', offsetX: 0, offsetY: 1 })
+
+                // 树洞入口
+                Column() {
+                  Text('🌳')
+                    .fontSize(32)
+                    .margin({ bottom: 2 })
+                  Text('树洞')
+                    .fontSize(14)
+                    .fontWeight(FontWeight.Bold)
+                  Text('说点悄悄话')
+                    .fontSize(10)
+                    .fontColor('#999')
+                }
+                .width('38%')
+                .height('100%')
+                .padding(12)
+                .backgroundColor(Color.White)
+                .borderRadius(12)
+                .justifyContent(FlexAlign.Center)
+                .alignItems(HorizontalAlign.Center)
+                .shadow({ radius: 4, color: '#00000008', offsetX: 0, offsetY: 1 })
+                .onClick(() => {
+                  this.showTreeHoleInput = !this.showTreeHoleInput;
+                })
+              }
+              .width('90%')
+              .justifyContent(FlexAlign.SpaceBetween)
+              .margin({ bottom: 8 })
+
+              // 历史心情条
+              if (this.moodHistory.length > 0) {
+                Row() {
+                  ForEach(this.moodHistory.slice(-7), (r: MoodRecord) => {
+                    Text(r.emoji)
+                      .fontSize(16)
+                      .margin({ right: 8 })
+                  })
+                }
+                .width('90%')
+                .padding({ top: 4, bottom: 4 })
+              }
+
+              // 树洞输入区
+              if (this.showTreeHoleInput) {
+                Column() {
+                  TextInput({ placeholder: '写点什么扔进树洞吧…（匿名）', text: this.treeHoleDraft })
+                    .width('100%')
+                    .height(60)
+                    .backgroundColor('#F8F4FF')
+                    .borderRadius(10)
+                    .border({ width: 1, color: '#E0D8F0' })
+                    .padding(10)
+                    .fontSize(14)
+                    .onChange((value: string) => { this.treeHoleDraft = value; })
+
+                  Row() {
+                    Blank()
+                    Button('取消')
+                      .fontSize(12)
+                      .backgroundColor('#EEE')
+                      .borderRadius(14)
+                      .height(30)
+                      .onClick(() => { this.showTreeHoleInput = false; this.treeHoleDraft = ''; })
+                    Button('匿名发布 🌳')
+                      .fontSize(12)
+                      .fontColor(Color.White)
+                      .backgroundColor('#7B68AE')
+                      .borderRadius(14)
+                      .height(30)
+                      .margin({ left: 10 })
+                      .onClick(() => { this.submitTreeHole(); })
+                  }
+                  .width('100%')
+                  .margin({ top: 8 })
+                }
+                .width('90%')
+                .padding(12)
+                .backgroundColor(Color.White)
+                .borderRadius(12)
+                .margin({ bottom: 8 })
+              }
 
               // 话题标签栏
               Row() {
@@ -238,6 +396,14 @@ struct MainPage {
 
               // 动态列表
               List({ space: 10 }) {
+                // 树洞帖子
+                ForEach(this.treeHolePosts, (tp: TreeHolePost) => {
+                  ListItem() {
+                    this.treeHoleCard(tp)
+                  }
+                }, (tp: TreeHolePost) => tp.id)
+
+                // 社区帖子
                 ForEach(this.posts, (post: CommunityPost) => {
                   ListItem() {
                     this.postCard(post)
@@ -521,6 +687,81 @@ struct MainPage {
     .onClick(() => {
       this.onToolClick(tool);
     })
+  }
+
+  // 发布树洞帖子
+  submitTreeHole() {
+    if (this.treeHoleDraft.trim().length === 0) {
+      return;
+    }
+    let newPost: TreeHolePost = {
+      id: 'th' + Date.now().toString(),
+      content: this.treeHoleDraft,
+      mood: this.todayMood || '😶',
+      timeAgo: '刚刚',
+      likeCount: 0,
+      isLiked: false
+    };
+    let newList: TreeHolePost[] = [newPost];
+    for (let p of this.treeHolePosts) {
+      newList.push(p);
+    }
+    this.treeHolePosts = newList;
+    this.treeHoleDraft = '';
+    this.showTreeHoleInput = false;
+    promptAction.showToast({ message: '已匿名发布到树洞 🌳' });
+  }
+
+  // 树洞帖子卡片
+  @Builder treeHoleCard(tp: TreeHolePost) {
+    Column() {
+      Row() {
+        Text('🌳')
+          .fontSize(18)
+        Text('树洞')
+          .fontSize(12)
+          .fontColor('#7B68AE')
+          .fontWeight(FontWeight.Bold)
+          .margin({ left: 4 })
+        Text('· 匿名')
+          .fontSize(11)
+          .fontColor('#999')
+          .margin({ left: 6 })
+        Blank()
+        Text(tp.timeAgo)
+          .fontSize(11)
+          .fontColor('#999')
+      }
+      .width('100%')
+      .margin({ bottom: 8 })
+
+      Text(tp.content)
+        .fontSize(14)
+        .fontColor('#444')
+        .lineHeight(20)
+        .margin({ bottom: 8 })
+
+      Row() {
+        Text(tp.mood)
+          .fontSize(14)
+          .margin({ right: 8 })
+        Text(tp.isLiked ? '💜' : '🤍')
+          .fontSize(14)
+          .onClick(() => {
+            tp.isLiked = !tp.isLiked;
+            if (tp.isLiked) { tp.likeCount++; } else { tp.likeCount--; }
+          })
+        Text(tp.likeCount > 0 ? tp.likeCount.toString() : '')
+          .fontSize(12)
+          .fontColor('#999')
+          .margin({ left: 4 })
+      }
+    }
+    .width('100%')
+    .padding({ top: 12, bottom: 12, left: 14, right: 14 })
+    .backgroundColor('#F8F4FF')
+    .borderRadius(12)
+    .border({ width: 1, color: '#E8E0F0' })
   }
 
   // 社区帖子卡片

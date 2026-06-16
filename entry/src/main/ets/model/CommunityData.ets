@@ -1,5 +1,5 @@
 /**
- * 社区数据模型 — 动态帖子 + 学习打卡。
+ * 社区数据模型 — 动态帖子 + 学习打卡 + 心情日记 + 树洞。
  */
 
 // 帖子
@@ -14,6 +14,7 @@ export interface CommunityPost {
   commentCount: number;
   timeAgo: string;     // 如 "3分钟前"
   isLiked: boolean;
+  source?: string;     // '树洞' 表示来自树洞
 }
 
 // 打卡用户
@@ -22,6 +23,57 @@ export interface CheckInUser {
   emoji: string;
   streak: number;      // 连续打卡天数
   rank: number;
+}
+
+// 心情选项
+export interface MoodOption {
+  emoji: string;
+  label: string;
+}
+
+export const moodOptions: MoodOption[] = [
+  { emoji: '😊', label: '开心' },
+  { emoji: '😢', label: '难过' },
+  { emoji: '😤', label: '生气' },
+  { emoji: '😴', label: '疲惫' },
+  { emoji: '🤩', label: '兴奋' },
+  { emoji: '😰', label: '焦虑' },
+  { emoji: '😌', label: '平静' },
+  { emoji: '🥳', label: '超棒' }
+];
+
+// 心情记录
+export interface MoodRecord {
+  date: string;    // 'YYYY-MM-DD'
+  emoji: string;
+  label: string;
+  note: string;    // 心情备注
+}
+
+// 树洞帖子（匿名）
+export interface TreeHolePost {
+  id: string;
+  content: string;
+  mood: string;      // emoji
+  timeAgo: string;
+  likeCount: number;
+  isLiked: boolean;
+}
+
+// 初始心情历史（最近7天模拟数据）
+export function getInitialMoodHistory(): MoodRecord[] {
+  let today = new Date();
+  let result: MoodRecord[] = [];
+  for (let i = 6; i >= 0; i--) {
+    let d = new Date(today);
+    d.setDate(d.getDate() - i);
+    let dateStr = d.getFullYear().toString() + '-' +
+      ((d.getMonth() + 1).toString().padStart(2, '0')) + '-' +
+      (d.getDate().toString().padStart(2, '0'));
+    let mood = moodOptions[Math.floor(Math.random() * moodOptions.length)];
+    result.push({ date: dateStr, emoji: mood.emoji, label: mood.label, note: '' });
+  }
+  return result;
 }
 
 // 模拟社区动态
