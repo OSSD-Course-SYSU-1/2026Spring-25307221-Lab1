@@ -15,6 +15,12 @@ struct MainPage {
   @State isMenuVisible: boolean = false;
   @State currentBreakpoint: BreakpointType = BreakpointType.SM;
   private windowWidth: number = 360;
+  // AI广场状态
+  @State agentSearch: string = '';
+  @State agentCategory: string = '全部';
+  @State showFavorites: boolean = false;
+  @State favoriteIds: string[] = [];
+  @State recentIds: string[] = [];
   // 社区状态
   @State userStreak: number = 0;
   @State checkedInToday: boolean = false;
@@ -66,35 +72,47 @@ struct MainPage {
           // ==================== Tab 1: AI广场 ====================
           TabContent() {
             Column() {
-              Column() {
-                Text('AI广场')
-                  .fontSize(22)
-                  .fontWeight(FontWeight.Bold)
-                Text('选择你的AI伙伴，开始对话')
-                  .fontSize(12)
-                  .fontColor('#999999')
-                  .margin({ top: 4 })
+              // 搜索栏
+              Row() {
+                TextInput({ placeholder: '🔍 搜索Agent...', text: this.agentSearch })
+                  .fontSize(14).backgroundColor('#F5F5F5').borderRadius(20).height(38)
+                  .layoutWeight(1).padding({ left: 14, right: 14 })
+                  .onChange((v: string) => { this.agentSearch = v; })
               }
-              .width('100%')
-              .alignItems(HorizontalAlign.Start)
-              .padding({ left: 16, right: 16, top: 12, bottom: 8 })
+              .width('100%').padding({ left: 16, right: 16, top: 8, bottom: 4 })
 
-              // 角色卡片列表
-              Grid() {
-                ForEach(aiCharacters, (ai: AICharacter) => {
-                  GridItem() {
-                    this.aiItem(ai)
+              // 分类标签
+              Row() {
+                Scroll() {
+                  Row() {
+                    ForEach(['全部', '学习', '工作', '生活', '娱乐', '心理', '创作'], (cat: string) => {
+                      Text(cat)
+                        .fontSize(12)
+                        .fontColor(this.agentCategory === cat ? Color.White : '#666')
+                        .backgroundColor(this.agentCategory === cat ? '#1E88E5' : '#F0F0F0')
+                        .borderRadius(16)
+                        .padding({ left: 14, right: 14, top: 6, bottom: 6 })
+                        .margin({ right: 8 })
+                        .onClick(() => { this.agentCategory = cat; })
+                    })
+                  }
+                }
+                .scrollable(ScrollDirection.Horizontal).scrollBar(BarState.Off)
+              }
+              .width('100%').padding({ left: 16, right: 16, top: 6, bottom: 8 })
+
+              // Agent卡片流
+              List({ space: 12 }) {
+                ForEach(this.getFilteredAgents(), (ai: AICharacter) => {
+                  ListItem() {
+                    this.agentCard(ai)
                   }
                 }, (ai: AICharacter) => ai.id)
               }
-              .columnsTemplate('1fr')
-              .rowsGap(12)
-              .width('100%')
-              .layoutWeight(1)
-              .padding({ left: 14, right: 14, top: 8 })
+              .width('100%').layoutWeight(1)
+              .padding({ left: 16, right: 16 })
             }
-            .width('100%')
-            .height('100%')
+            .width('100%').height('100%').backgroundColor('#F5F5F5')
           }
           .tabBar(this.TabBuilder('AI广场', 1, '🤖'))
           .align(Alignment.Top)
@@ -526,7 +544,111 @@ struct MainPage {
     .backgroundColor(Color.White)
   }
 
-  // AI角色卡片
+  // 筛选Agent
+  getFilteredAgents(): AICharacter[] {
+    let list = aiCharacters;
+    if (this.agentCategory !== '全部') {
+      list = list.filter(a => a.category === this.agentCategory);
+    }
+    if (this.agentSearch.trim()) {
+      let kw = this.agentSearch.toLowerCase();
+      list = list.filter(a =>
+        a.name.includes(kw) || a.description.includes(kw) ||
+        a.tags.some(t => t.includes(kw))
+      );
+    }
+    return list;
+  }
+
+  // 新Agent卡片
+  @Builder agentCard(ai: AICharacter) {
+    Column() {
+      // 头部：头像 + 名称 + 评分 + 收藏
+      Row() {
+        Column() {
+          Text(ai.emoji).fontSize(36)
+        }
+        .width(52).height(52).borderRadius(14)
+        .backgroundColor(ai.bgColor)
+        .justifyContent(FlexAlign.Center).alignItems(HorizontalAlign.Center)
+
+        Column() {
+          Row() {
+            Text(ai.name).fontSize(16).fontWeight(FontWeight.Bold).fontColor('#1a1a1a')
+            // 评分星
+            Text(' ⭐' + ai.rating.toFixed(1).toString())
+              .fontSize(11).fontColor('#F0A500').margin({ left: 6 })
+          }
+          Text(ai.description).fontSize(12).fontColor('#888').margin({ top: 2 }).maxLines(1)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+        }
+        .alignItems(HorizontalAlign.Start).layoutWeight(1).margin({ left: 12 })
+
+        // 收藏按钮
+        Text(this.favoriteIds.indexOf(ai.id) >= 0 ? '❤️' : '🤍')
+          .fontSize(18)
+          .onClick(() => {
+            let idx = this.favoriteIds.indexOf(ai.id);
+            if (idx >= 0) {
+              this.favoriteIds.splice(idx, 1);
+            } else {
+              this.favoriteIds.push(ai.id);
+            }
+          })
+      }
+      .width('100%')
+
+      // 标签行
+      Row() {
+        ForEach(ai.tags, (tag: string) => {
+          Text(tag)
+            .fontSize(10).fontColor(ai.color)
+            .padding({ left: 8, right: 8, top: 3, bottom: 3 })
+            .backgroundColor(ai.bgColor).borderRadius(8)
+            .margin({ right: 6 })
+        }, (tag: string) => tag)
+      }
+      .width('100%').margin({ top: 10 })
+
+      // 底部：使用人数 + 立即体验
+      Row() {
+        Text(ai.userCount.toString() + '人在用')
+          .fontSize(11).fontColor('#aaa')
+
+        Blank()
+
+        Button('立即体验')
+          .fontSize(12).fontColor(Color.White)
+          .backgroundColor(ai.color).borderRadius(16).height(32)
+          .padding({ left: 16, right: 16 })
+          .onClick(() => {
+            // 记录最近使用
+            let idx = this.recentIds.indexOf(ai.id);
+            if (idx >= 0) { this.recentIds.splice(idx, 1); }
+            this.recentIds.unshift(ai.id);
+            if (this.recentIds.length > 5) { this.recentIds.pop(); }
+
+            router.pushUrl({
+              url: 'pages/ChatPage',
+              params: {
+                contactId: ai.id,
+                contactName: ai.name,
+                greeting: ai.greeting,
+                isAI: true
+              }
+            });
+          })
+      }
+      .width('100%').margin({ top: 10 })
+    }
+    .width('100%')
+    .padding({ top: 16, bottom: 16, left: 16, right: 16 })
+    .backgroundColor(Color.White)
+    .borderRadius(16)
+    .shadow({ radius: 4, color: '#00000008', offsetX: 0, offsetY: 1 })
+  }
+
+  // 旧版AI角色卡片（保留兼容）
   @Builder aiItem(ai: AICharacter) {
     Row() {
       Column() {

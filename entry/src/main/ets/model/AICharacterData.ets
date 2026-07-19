@@ -11,6 +11,10 @@ export interface AICharacter {
   emoji: string    // 卡片展示 emoji
   color: string    // 主题色
   bgColor: string  // 背景色
+  tags: string[]   // 标签：["教育","考试","复习"]
+  rating: number   // 评分 1-5
+  userCount: number // 使用人数
+  category: string  // 分类：学习/工作/生活/娱乐/心理/创作
 }
 
 // AI角色列表（仅角色，工具见 ToolData.ets）
@@ -40,7 +44,11 @@ export const aiCharacters: AICharacter[] = [
 【学习建议】`,
     emoji: '🎓',
     color: '#4A90D9',
-    bgColor: '#EEF4FB'
+    bgColor: '#EEF4FB',
+    tags: ['教育', '考试', '知识总结'],
+    rating: 4.8,
+    userCount: 12600,
+    category: '学习'
   },
   // 2. 编程助手
   {
@@ -69,7 +77,11 @@ export const aiCharacters: AICharacter[] = [
 【延伸学习】`,
     emoji: '💻',
     color: '#22A699',
-    bgColor: '#E8F6F3'
+    bgColor: '#E8F6F3',
+    tags: ['编程', 'debug', '算法'],
+    rating: 4.9,
+    userCount: 9800,
+    category: '学习'
   },
   // 3. 面试官
   {
@@ -96,7 +108,11 @@ export const aiCharacters: AICharacter[] = [
 【改进建议】`,
     emoji: '💼',
     color: '#2C3E6B',
-    bgColor: '#EEF0F7'
+    bgColor: '#EEF0F7',
+    tags: ['面试', '求职', '简历'],
+    rating: 4.7,
+    userCount: 8500,
+    category: '工作'
   },
   // 4. 心理咨询师
   {
@@ -119,7 +135,11 @@ export const aiCharacters: AICharacter[] = [
 回复风格温暖而专业。`,
     emoji: '💜',
     color: '#C77DFF',
-    bgColor: '#F8F0FF'
+    bgColor: '#F8F0FF',
+    tags: ['心理', '情绪', '陪伴'],
+    rating: 4.6,
+    userCount: 7200,
+    category: '心理'
   },
   // 5. 塔罗师
   {
@@ -133,7 +153,11 @@ export const aiCharacters: AICharacter[] = [
     prompt: `（塔罗角色的系统提示词由 TarotService.getSystemPrompt() 动态提供，此处仅作占位。）`,
     emoji: '🔮',
     color: '#7B2D8E',
-    bgColor: '#F8F0FA'
+    bgColor: '#F8F0FA',
+    tags: ['塔罗', '占卜', '娱乐'],
+    rating: 4.5,
+    userCount: 5600,
+    category: '娱乐'
   },
   // 6. 穿搭师
   {
@@ -164,7 +188,11 @@ export const aiCharacters: AICharacter[] = [
 【避雷建议】`,
     emoji: '👗',
     color: '#E8658A',
-    bgColor: '#FDF0F4'
+    bgColor: '#FDF0F4',
+    tags: ['穿搭', '时尚', '搭配'],
+    rating: 4.4,
+    userCount: 4100,
+    category: '生活'
   },
   // 7. 游戏教练
   {
@@ -207,7 +235,11 @@ export const aiCharacters: AICharacter[] = [
 加油，下一把一定赢！`,
     emoji: '🎮',
     color: '#E74C3C',
-    bgColor: '#FDEDEC'
+    bgColor: '#FDEDEC',
+    tags: ['游戏', '攻略', '电竞'],
+    rating: 4.3,
+    userCount: 3800,
+    category: '娱乐'
   },
   // 8. AI Idol
   {
@@ -240,6 +272,10 @@ export const aiCharacters: AICharacter[] = [
 ⚠️ 你是AI模拟的，不代表偶像本人。`,
     emoji: '⭐',
     color: '#F39C12',
-    bgColor: '#FEF9E7'
+    bgColor: '#FEF9E7',
+    tags: ['偶像', '娱乐', '明星'],
+    rating: 4.2,
+    userCount: 6200,
+    category: '娱乐'
   }
 ];
