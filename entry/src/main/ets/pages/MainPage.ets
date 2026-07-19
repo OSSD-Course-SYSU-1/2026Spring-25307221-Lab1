@@ -6,6 +6,7 @@ import { BreakpointType, getBreakpoint } from './common/BreakpointSystem';
 import { window } from '@kit.ArkUI';
 import { promptAction } from '@kit.ArkUI';
 import { GameMenu, GuessNumber, SnakeGame, SlotMachine, ReactionTest, PongGame, TetrisGame } from './components/MiniGameView';
+import { HomePage } from './HomePage';
 
 @Entry
 @Component
@@ -55,7 +56,14 @@ struct MainPage {
 
       Column() {
         Tabs({ index: this.currentIndex }) {
-          // ==================== Tab 0: AI广场 ====================
+          // ==================== Tab 0: 首页 ====================
+          TabContent() {
+            HomePage()
+          }
+          .tabBar(this.TabBuilder('首页', 0, '🏠'))
+          .align(Alignment.Top)
+
+          // ==================== Tab 1: AI广场 ====================
           TabContent() {
             Column() {
               Column() {
@@ -88,7 +96,7 @@ struct MainPage {
             .width('100%')
             .height('100%')
           }
-          .tabBar(this.TabBuilder('AI广场', 0, '🤖'))
+          .tabBar(this.TabBuilder('AI广场', 1, '🤖'))
           .align(Alignment.Top)
 
           // ==================== Tab 1: 工具箱 ====================
@@ -137,7 +145,7 @@ struct MainPage {
             }
             .width('100%').height('100%')
           }
-          .tabBar(this.TabBuilder('工具箱', 1, '🧰'))
+          .tabBar(this.TabBuilder('工具箱', 2, '🧰'))
           .align(Alignment.Top)
 
           // ==================== Tab 4: 社区 ====================
@@ -329,7 +337,7 @@ struct MainPage {
             .height('100%')
             .backgroundColor('#F0F0F0')
           }
-          .tabBar(this.TabBuilder('社区', 2, '🌐'))
+          .tabBar(this.TabBuilder('社区', 3, '🌐'))
           .align(Alignment.Top)
 
           // ==================== Tab 3: 游戏 ====================
@@ -358,7 +366,7 @@ struct MainPage {
             }
             .width('100%').height('100%')
           }
-          .tabBar(this.TabBuilder('游戏', 3, '🎮'))
+          .tabBar(this.TabBuilder('游戏', 4, '🎮'))
           .align(Alignment.Top)
 
           // ==================== Tab 4: 我的 ====================
@@ -431,7 +439,7 @@ struct MainPage {
             .height('100%')
             .backgroundColor('#F5F5F5')
           }
-          .tabBar(this.TabBuilder('我的', 4, '👤'))
+          .tabBar(this.TabBuilder('我的', 5, '👤'))
           .align(Alignment.Top)
         }
         .layoutWeight(1)
@@ -439,7 +447,7 @@ struct MainPage {
         .barHeight(56)
         .onChange((index: number) => {
           this.currentIndex = index;
-          if (index === 2) {
+          if (index === 3) {
             this.refreshFeed();
           }
         })
