@@ -6,6 +6,7 @@
  */
 
 import { Agent } from './Agent'
+import { StringMap } from './SharedTypes'
 
 // ==================== Agent 角色 ====================
 
@@ -105,7 +106,7 @@ export interface TeamContext {
 
   // 共享知识
   sharedKnowledge: string    // 所有成员需要知道的信息
-  terminology: Record<string, string>  // 术语表
+  terminology: StringMap  // 术语表
 
   // 进度
   progressReport: string     // 最新进度报告
@@ -160,24 +161,28 @@ export interface TeamEvent {
 
 // ==================== 团队模板 ====================
 
+export interface TeamRoleDef {
+  role: AgentRole
+  agentId: string
+  responsibility: string
+  deliverable: string
+}
+
+export interface SubtaskTemplateDef {
+  title: string
+  description: string
+  assignedRole: AgentRole
+  priority: number
+  dependsOn: number[]
+}
+
 export interface TeamTemplate {
   id: string
   name: string
   description: string
-  agentRoles: {
-    role: AgentRole
-    agentId: string          // 推荐 Agent
-    responsibility: string   // 职责描述
-    deliverable: string      // 交付物
-  }[]
-  subtaskTemplate: {
-    title: string
-    description: string
-    assignedRole: AgentRole
-    priority: number
-    dependsOn: number[]      // 依赖的 subtask 索引
-  }[]
-  estimatedDuration: number  // 预估总耗时（分钟）
+  agentRoles: TeamRoleDef[]
+  subtaskTemplate: SubtaskTemplateDef[]
+  estimatedDuration: number
   tags: string[]
 }
 

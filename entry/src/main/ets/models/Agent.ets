@@ -5,6 +5,8 @@
  * 按模块组织，支持后续无限扩展。
  */
 
+import { StringMap } from './SharedTypes'
+
 // ==================== 分类 ====================
 
 export type AgentCategory = '学习' | '工作' | '生活' | '娱乐' | '心理' | '创作'
@@ -144,12 +146,31 @@ export interface Agent {
   runtime?: AgentRuntime
 }
 
+// ==================== Agent 覆写类型 ====================
+
+export interface AgentOverrides {
+  id?: string
+  name?: string
+  description?: string
+  category?: AgentCategory
+  systemPrompt?: string
+  skills?: AgentSkill[]
+  workflows?: AgentWorkflow[]
+  memory?: AgentMemory
+  appearance?: AgentAppearance
+  interaction?: AgentInteraction
+  rating?: AgentRating
+  social?: AgentSocial
+  meta?: AgentMeta
+  runtime?: AgentRuntime
+}
+
 // ==================== 工厂函数 ====================
 
 /**
  * 创建默认 Agent 配置（方便快速定义新 Agent）
  */
-export function createAgentDefaults(overrides: Partial<Agent>): Agent {
+export function createAgentDefaults(overrides: AgentOverrides): Agent {
   return {
     id: overrides.id || '',
     name: overrides.name || '',

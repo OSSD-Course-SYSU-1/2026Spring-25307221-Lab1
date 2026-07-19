@@ -6,6 +6,7 @@
  */
 
 import { Skill, SkillInputType, SkillOutputType } from './Skill'
+import { StringMap } from './SharedTypes'
 
 // ==================== 步骤状态 ====================
 
@@ -132,7 +133,7 @@ export interface WorkflowContext {
   runId: string
   userId: string
   agentId: string            // 执行此 Workflow 的 Agent
-  variables: Record<string, string>  // 上下文变量
+  variables: StringMap  // 上下文变量
 }
 
 // ==================== 历史记录条目 ====================

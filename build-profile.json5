@@ -1,20 +1,6 @@
 {
   "app": {
-    "signingConfigs": [
-      {
-        "name": "default",
-        "type": "HarmonyOS",
-        "material": {
-          "certpath": "C:\\Users\\lenovo\\.ohos\\config\\default_harmonychat-main_PAYPWvvO_VKmTyS2YLGL07jm88RBUmpF74gXoex3yVE=.cer",
-          "keyAlias": "debugKey",
-          "keyPassword": "0000001A5833B9BE7F46CE951569ABEA0FF95EC1C63B8DDEDA24B330F21EAECED4BFA500E12A6AAA46EC",
-          "profile": "C:\\Users\\lenovo\\.ohos\\config\\default_harmonychat-main_PAYPWvvO_VKmTyS2YLGL07jm88RBUmpF74gXoex3yVE=.p7b",
-          "signAlg": "SHA256withECDSA",
-          "storeFile": "C:\\Users\\lenovo\\.ohos\\config\\default_harmonychat-main_PAYPWvvO_VKmTyS2YLGL07jm88RBUmpF74gXoex3yVE=.p12",
-          "storePassword": "0000001A1F0F603235459F2ADC286B56CDB6E536501B367FF29C6D2BBCE6CC65EA8AB4DFA40174C97C7B"
-        }
-      }
-    ],
+    "signingConfigs": [],
     "products": [
       {
         "name": "default",

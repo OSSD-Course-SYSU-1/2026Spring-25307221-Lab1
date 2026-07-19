@@ -5,6 +5,8 @@
  * 记忆按类型分类，支持自动提取和手动编辑。
  */
 
+import { StringMap, NumberMap } from './SharedTypes'
+
 // ==================== 记忆类型 ====================
 
 export type MemoryType =
@@ -33,7 +35,7 @@ export interface MemoryEntry {
   createdAt: string          // ISO time
   updatedAt: string          // ISO time
   expiresAt: string          // 过期时间，空表示永不过期
-  metadata: Record<string, string>  // 扩展字段
+  metadata: StringMap  // 扩展字段
 }
 
 // ==================== 记忆快照（注入Agent上下文用） ====================
@@ -68,12 +70,22 @@ export interface MemoryQuery {
   sortOrder?: 'asc' | 'desc'
 }
 
+// ==================== 记忆更新参数 ====================
+
+export interface MemoryEntryUpdate {
+  title?: string
+  content?: string
+  tags?: string[]
+  importance?: number
+  metadata?: StringMap
+}
+
 // ==================== 记忆统计 ====================
 
 export interface MemoryStats {
   totalEntries: number
-  byType: Record<string, number>
-  byAgent: Record<string, number>
+  byType: NumberMap
+  byAgent: NumberMap
   oldestEntry: string
   newestEntry: string
 }

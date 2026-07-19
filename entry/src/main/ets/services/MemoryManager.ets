@@ -7,7 +7,7 @@
 
 import {
   MemoryEntry, MemoryType, MemorySnapshot, MemoryQuery,
-  MemoryStats, MemoryEvent, ChatSummary
+  MemoryStats, MemoryEvent, ChatSummary, MemoryEntryUpdate
 } from '../models/Memory'
 
 // ==================== MemoryManager ====================
@@ -39,7 +39,7 @@ export class MemoryManager {
     content: string,
     options?: {
       tags?: string[], importance?: number, source?: string,
-      agentId?: string, expiresAt?: string, metadata?: Record<string, string>
+      agentId?: string, expiresAt?: string, metadata?: StringMap
     }
   ): MemoryEntry {
     let entry: MemoryEntry = {
@@ -64,7 +64,7 @@ export class MemoryManager {
   /**
    * 更新一条记忆
    */
-  update(id: string, updates: Partial<MemoryEntry>): MemoryEntry | null {
+  update(id: string, updates: MemoryEntryUpdate): MemoryEntry | null {
     for (let entry of this.entries) {
       if (entry.id === id) {
         if (updates.title !== undefined) { entry.title = updates.title }
@@ -378,8 +378,8 @@ export class MemoryManager {
    * 获取记忆统计
    */
   getStats(): MemoryStats {
-    let byType: Record<string, number> = {}
-    let byAgent: Record<string, number> = {}
+    let byType: NumberMap = {}
+    let byAgent: NumberMap = {}
     let oldest = ''
     let newest = ''
 

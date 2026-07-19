@@ -7,19 +7,56 @@
 
 import router from '@ohos.router';
 
+// ---- 接口定义 ----
+interface WeatherData {
+  temp: number;
+  condition: string;
+  icon: string;
+  city: string;
+  high: number;
+  low: number;
+}
+
+interface DateData {
+  weekday: string;
+  date: string;
+  lunar: string;
+}
+
+interface TaskData {
+  id: string;
+  title: string;
+  type: string;
+  done: boolean;
+  time: string;
+}
+
+interface ReminderData {
+  id: string;
+  text: string;
+  icon: string;
+}
+
+interface QuickAgentData {
+  id: string;
+  name: string;
+  emoji: string;
+  color: string;
+}
+
 // ---- 模拟数据（后续从Service层获取） ----
-const MOCK_WEATHER = { temp: 26, condition: '晴', icon: '☀️', city: '北京', high: 30, low: 22 }
-const MOCK_DATE = { weekday: '星期二', date: '2026年6月17日', lunar: '农历五月初三' }
-const MOCK_TASKS = [
+const MOCK_WEATHER: WeatherData = { temp: 26, condition: '晴', icon: '☀️', city: '北京', high: 30, low: 22 }
+const MOCK_DATE: DateData = { weekday: '星期二', date: '2026年6月17日', lunar: '农历五月初三' }
+const MOCK_TASKS: TaskData[] = [
   { id: 't1', title: '线代第六章习题', type: '学习', done: false, time: '14:00' },
   { id: 't2', title: '投递字节跳动简历', type: '工作', done: false, time: '16:00' },
   { id: 't3', title: '健身房练腿', type: '生活', done: true, time: '19:00' }
 ]
-const MOCK_REMINDERS = [
+const MOCK_REMINDERS: ReminderData[] = [
   { id: 'r1', text: '明天上午10点有模电考试，记得带计算器', icon: '📝' },
   { id: 'r2', text: '你设定的Python学习计划今天该复习列表推导式了', icon: '💻' }
 ]
-const MOCK_QUICK_AGENTS = [
+const MOCK_QUICK_AGENTS: QuickAgentData[] = [
   { id: 'ai_teacher', name: '学习导师', emoji: '🎓', color: '#4A90D9' },
   { id: 'ai_coder', name: '编程助手', emoji: '💻', color: '#22A699' },
   { id: 'ai_interview', name: '面试教练', emoji: '💼', color: '#2C3E6B' },
