@@ -67,7 +67,7 @@ const MOCK_QUICK_AGENTS: QuickAgentData[] = [
 
 @Entry
 @Component
-struct HomePage {
+export struct HomePage {
   // 后续替换为从 Service 获取的数据
   @State weatherTemp: number = MOCK_WEATHER.temp
   @State weatherIcon: string = MOCK_WEATHER.icon
@@ -168,7 +168,7 @@ struct HomePage {
           .width('100%')
           .margin({ bottom: 10 })
 
-          ForEach(MOCK_TASKS, (task: {id: string, title: string, type: string, done: boolean, time: string}) => {
+          ForEach(MOCK_TASKS, (task: TaskData) => {
             Row() {
               // 完成状态
               Column() {
@@ -199,7 +199,7 @@ struct HomePage {
             }
             .width('100%')
             .padding({ top: 8, bottom: 8 })
-          }, (task: {id: string}) => task.id)
+          }, (task: TaskData) => task.id)
         }
         .width('100%')
         .padding(16)
@@ -218,7 +218,7 @@ struct HomePage {
           .width('100%')
           .margin({ bottom: 10 })
 
-          ForEach(MOCK_REMINDERS, (r: {id: string, text: string, icon: string}) => {
+          ForEach(MOCK_REMINDERS, (r: ReminderData) => {
             Row() {
               Text(r.icon)
                 .fontSize(20)
@@ -234,7 +234,7 @@ struct HomePage {
             .backgroundColor('#F5F9FF')
             .borderRadius(10)
             .margin({ bottom: 6 })
-          }, (r: {id: string}) => r.id)
+          }, (r: ReminderData) => r.id)
         }
         .width('100%')
         .padding(16)
@@ -334,7 +334,7 @@ struct HomePage {
           .margin({ bottom: 10 })
 
           Grid() {
-            ForEach(MOCK_QUICK_AGENTS, (agent: {id: string, name: string, emoji: string, color: string}) => {
+            ForEach(MOCK_QUICK_AGENTS, (agent: QuickAgentData) => {
               GridItem() {
                 Column() {
                   Text(agent.emoji)
@@ -361,7 +361,7 @@ struct HomePage {
                   })
                 })
               }
-            }, (agent: {id: string}) => agent.id)
+            }, (agent: QuickAgentData) => agent.id)
           }
           .columnsTemplate('1fr 1fr 1fr')
           .columnsGap(10)
