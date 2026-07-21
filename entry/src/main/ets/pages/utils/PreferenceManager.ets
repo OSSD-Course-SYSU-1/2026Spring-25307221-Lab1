@@ -20,11 +20,11 @@ const PREFERENCES_NAME: string = 'MobileIMSDKStore';
  */
 export default class PreferenceManager {
   private preferences?: preferences.Preferences;
-  private context = getContext(this) as common.UIAbilityContext;
+  private context?: common.UIAbilityContext;
   private static instance: PreferenceManager;
 
   private constructor() {
-    this.initPreference(PREFERENCES_NAME);
+    // 延迟初始化，等待 context 可用
   }
 
   public static getInstance(): PreferenceManager {
@@ -35,6 +35,9 @@ export default class PreferenceManager {
   }
 
   async initPreference(storeName: string): Promise<void> {
+    if (!this.context) {
+      this.context = getContext(this) as common.UIAbilityContext;
+    }
     return preferences.getPreferences(this.context, storeName)
       .then((preferences: preferences.Preferences) => {
         this.preferences = preferences;

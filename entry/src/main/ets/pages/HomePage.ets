@@ -65,7 +65,6 @@ const MOCK_QUICK_AGENTS: QuickAgentData[] = [
   { id: 'ai_tarot', name: '塔罗师', emoji: '🔮', color: '#7B2D8E' },
 ]
 
-@Entry
 @Component
 export struct HomePage {
   // 后续替换为从 Service 获取的数据
